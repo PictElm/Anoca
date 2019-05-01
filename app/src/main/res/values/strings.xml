@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Anoca</string>
+
+    <string name="title_activity_main">Anoca Card</string>
+    <string name="title_activity_setting">Anoca Settings</string>
+
+    <string name="master_switch_text">Activate Anoca</string>
+    <string name="switch_twosided_text">Switch two-sided cards</string>
+    <string name="switch_writingtask_text">Switch writing task cards</string>
+    <string name="switch_multiple_text">Switch multiple choices cards</string>
+    <string name="switch_associate_text">Switch associate cards</string>
+
+    <string name="button_edit_text">Edit</string>
+
+    <string name="edit_validate_text">OK</string>
+    <string name="edit_cancel_text">Cancel</string>
+    <string name="edit_delete_text">Remove</string>
+
+    <string name="edit_category_title_text">Editing category</string>
+    <string name="add_category_title_text">Adding category</string>
+
+    <string name="hint_name_text">Name</string>
+    <string name="switch_category_text">Enable category</string>
+
+    <string name="edit_card_title_text">Editing card</string>
+    <string name="add_card_title_text">Adding card</string>
+
+    <string name="hint_front_text">Front</string>
+    <string name="hint_back_text">Back</string>
+    <string name="hint_weight_text">Weight</string>
+    <string name="switch_canincluded_text">Can be included</string>
+
+    <string name="writingtask_answer_text">Answer</string>
+
+    <string name="database_file_key" translatable="false">anoca.database</string>
+    <string name="preference_file_key" translatable="false">anoca.settings</string>
+
+    <string name="master_switch_key" translatable="false">anoca.settings.master</string>
+    <string name="switch_twosided_key" translatable="false">anoca.settings.twosided</string>
+    <string name="switch_writingtask_key" translatable="false">anoca.settings.writingtask</string>
+    <string name="switch_multiple_key" translatable="false">anoca.settings.multiple</string>
+    <string name="switch_associate_key" translatable="false">anoca.settings.associate</string>
+</resources>

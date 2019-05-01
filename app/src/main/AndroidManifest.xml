@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.patatos.sac.anoca">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme"
+            tools:ignore="GoogleAppIndexingWarning">
+
+        <service
+                android:name="com.patatos.sac.anoca.MyService"
+                android:enabled="true"
+                android:exported="false">
+        </service>
+
+        <activity
+                android:name="com.patatos.sac.anoca.SettingActivity"
+                android:label="@string/title_activity_setting"
+                android:screenOrientation="portrait"
+                android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+                android:name="com.patatos.sac.anoca.MainActivity"
+                android:excludeFromRecents="true"
+                android:launchMode="singleInstance"
+                android:label="@string/title_activity_main"
+                android:theme="@style/AppTheme.Card">
+        </activity>
+
+        <activity
+                android:name="com.patatos.sac.anoca.StartActivity"
+                android:excludeFromRecents="true"
+                android:theme="@style/AppTheme.Card">
+        </activity>
+
+        <receiver
+                android:name="com.patatos.sac.anoca.Receive"
+                android:enabled="true"
+                android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="anoca.intent.action.SERVICE_DESTROYED"/>
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

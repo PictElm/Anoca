@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <Switch
+            android:id="@+id/switch_canincluded"
+            android:text="@string/switch_canincluded_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:checked="true"/>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginBottom="16dp">
+        <TextView
+                android:id="@+id/textView"
+                android:text="@string/hint_weight_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+        <EditText
+                android:id="@+id/edit_weight"
+                android:hint="@string/hint_weight_text"
+                android:text="1" tools:ignore="HardcodedText, Autofill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:inputType="number"/>
+    </LinearLayout>
+    <EditText
+            android:id="@+id/edit_front"
+            android:hint="@string/hint_front_text"
+            android:inputType="textAutoCorrect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            tools:ignore="Autofill"/>
+    <EditText
+            android:id="@+id/edit_back"
+            android:hint="@string/hint_back_text"
+            android:inputType="textAutoCorrect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            tools:ignore="Autofill"/>
+    <Spinner
+            android:id="@+id/edit_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dropdown"
+            tools:ignore="Autofill"/>
+
+</LinearLayout>
