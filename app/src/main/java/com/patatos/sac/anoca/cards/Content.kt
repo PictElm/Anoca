@@ -1,5 +1,8 @@
 package com.patatos.sac.anoca.cards
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.support.v4.content.ContextCompat
@@ -14,6 +17,7 @@ import java.io.InputStream
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.math.min
 
 import kotlin.random.Random
 
@@ -52,12 +56,25 @@ class Content(private val activity: MainActivity, private val raw: List<String>)
         } else this.raw[id]
     }
 
+    // TODO: ratio `r` not accounted for
+    private fun cropBitmapToDrawable(b: Bitmap?, r: Float = 1f): Drawable? {
+        if (b == null)
+            return null
+
+        val size = min(b.width, b.height)
+        val xOff = (b.width - size) / 2
+        val yOff = (b.height - size) / 2
+
+        return BitmapDrawable(this.activity.resources, Bitmap.createBitmap(b, xOff, yOff, size, size))
+    }
+
     fun getImage(id: Int): Drawable? {
         return if (this.isOnline(id)) {
             this.getOnline(id) {
-                    stream -> Drawable.createFromStream(stream, "src")
+                    stream -> this.cropBitmapToDrawable(BitmapFactory.decodeStream(stream))
             } ?: ContextCompat.getDrawable(this.activity, R.drawable.no_resource)
-        } else Drawable.createFromPath(this.raw[id]) ?: ContextCompat.getDrawable(this.activity, R.drawable.no_resource)
+        } else this.cropBitmapToDrawable(BitmapFactory.decodeFile(this.raw[id]))
+            ?: ContextCompat.getDrawable(this.activity, R.drawable.no_resource)
     }
 
     fun getText(id: Int): String {
@@ -67,7 +84,7 @@ class Content(private val activity: MainActivity, private val raw: List<String>)
     fun getSpanned(id: Int): Spanned {
         return this.getRaw(id).let {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                Html.fromHtml(CustomCardParse(it).toMarkup(), 0) //null, RubyTagHandler()) TODO: find alternative
+                Html.fromHtml(CustomCardParse(it).toMarkup(), 0)
             else SpannedString(CustomCardParse(it, true).toString())
         }
     }

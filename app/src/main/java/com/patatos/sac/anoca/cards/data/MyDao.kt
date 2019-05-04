@@ -43,7 +43,7 @@ interface MyDao {
     fun allWeights(): List<Weight>
 
     // @see [images.use.perl.org/use.perl.org/_bart/journal/33630.html] for weighted random selection -> ORDER BY -LOG(1.0 - RANDOM()) / weight
-    @Query("SELECT Cards.* FROM Cards JOIN Categories JOIN Weights WHERE Cards.category_id = Categories.id AND Categories.enabled AND Cards.id = Weights.card_id ORDER BY Weights.last_time + RANDOM() * (5 * 60 * 60 * 1000) ASC LIMIT 1")
+    @Query("SELECT Cards.* FROM Cards JOIN Categories JOIN Weights WHERE Cards.category_id = Categories.id AND Categories.enabled AND Cards.id = Weights.card_id ORDER BY Weights.last_time ASC LIMIT 1")
     fun randomCard(): List<DataCard>
 
     @Query("SELECT DISTINCT Cards.* FROM Cards JOIN Weights WHERE Cards.id != :cardId AND Cards.category_id = :categoryId AND Cards.id = Weights.card_id ORDER BY Weights.last_time + RANDOM() * (5 * 60 * 60 * 1000) ASC LIMIT :limit")

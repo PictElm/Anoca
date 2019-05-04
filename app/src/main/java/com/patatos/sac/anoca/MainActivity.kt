@@ -15,6 +15,7 @@ import com.patatos.sac.anoca.cards.types.Associate
 import com.patatos.sac.anoca.cards.types.Multiple
 import com.patatos.sac.anoca.cards.types.TwoSided
 import com.patatos.sac.anoca.cards.types.WritingTask
+import java.text.DateFormat
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -94,9 +95,7 @@ class MainActivity : AppCompatActivity() {
         val root = this.db.getDao().randomCard()[0]
         this.db.getDao().randomCards(root.id, root.categoryId!!,n - 1).let {
             this.data = listOf(root) + it
-            this.data + List(n - it.count()) {
-                DataCard(this.getString(R.string.hint_front_text), this.getString(R.string.hint_back_text))
-            }
+            this.data + List(n - it.count()) { DataCard(this.getString(R.string.hint_front_text), this.getString(R.string.hint_back_text)) }
         }.forEach {
             CustomCardParse.processNested(db, Pair(it.dataFRaw, it.dataBRaw)).apply {
                 rawData.add(this.first)
@@ -109,7 +108,7 @@ class MainActivity : AppCompatActivity() {
 
     fun answered(status: Status) {
         Log.i("anoca::answered", "$status")
-        if (status != Status.DESTROYED) {
+        if (status == Status.ANSWERED || status == Status.ANSWERED_RIGHT || status == Status.ANSWERED_WRONG) {
             Executors.newSingleThreadExecutor().let { ex ->
                 ex.execute {
                     this.data.forEach {
@@ -128,7 +127,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             this.finish()
-        }
+        } else if (status == Status.SAVED || status == Status.DISMISSED) this.finish()
     }
 
     fun startSettingActivity() {

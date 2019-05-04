@@ -10,6 +10,7 @@ import android.support.v4.widget.TextViewCompat
 import android.support.v7.app.AlertDialog
 import android.text.Layout
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
@@ -77,11 +78,10 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
             target.text = this.content.getSpanned(id)
 
             TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(target, 4, 42, 1, TypedValue.COMPLEX_UNIT_SP)
-            //TextViewCompat.setAutoSizeTextTypeWithDefaults(target, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM)
             target.minLines = 1
             target.maxLines = target.text.split(' ').count()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                target.breakStrategy = Layout.BREAK_STRATEGY_BALANCED
+                target.breakStrategy = Layout.BREAK_STRATEGY_HIGH_QUALITY
                 target.hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NONE
             }
         }
