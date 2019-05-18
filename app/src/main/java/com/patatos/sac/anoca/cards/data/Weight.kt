@@ -5,6 +5,7 @@ import android.arch.persistence.room.Entity
 import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
 import android.support.annotation.NonNull
+import java.text.DateFormat
 
 @Entity(tableName = "Weights")
 class Weight (
@@ -16,5 +17,9 @@ class Weight (
 
     @Ignore
     constructor(cardId: Long) : this(0, cardId, System.currentTimeMillis())
+
+    override fun toString(): String {
+        return "(${this.cardId}) last: ${DateFormat.getDateInstance().format(this.lastTime)}"
+    }
 
 }

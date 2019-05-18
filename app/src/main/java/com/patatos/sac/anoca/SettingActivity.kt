@@ -102,6 +102,16 @@ class SettingActivity : AppCompatActivity() {
                         .show()
                 }
 
+                val debugMessageLeft = this.db.getDao().allWeights().fold("") { c, w -> "$c\n$w" }
+                fab_add_category.setOnLongClickListener {
+                    AlertDialog.Builder(this)
+                        .setMessage(debugMessageLeft)
+                        .setPositiveButton(R.string.edit_validate_text) { dialog, _ -> dialog.dismiss() }
+                        .setCancelable(true)
+                        .create().show()
+                    true
+                }
+
                 // set dialog to add a card
                 fab_add_card.setOnClickListener {
                     val layout = this.layoutInflater.inflate(R.layout.dialog_edit_card, null)
