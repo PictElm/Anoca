@@ -26,6 +26,9 @@ interface MyDao {
     @Delete
     fun deleteCards(vararg cards: DataCard)
 
+    @Query("DELETE FROM Cards WHERE category_id = :categoryId")
+    fun deleteCardsFromCategory(categoryId: Long)
+
     @Delete
     fun deleteCategories(vararg categories: Category)
 
@@ -42,7 +45,7 @@ interface MyDao {
     @Query("SELECT * FROM Weights ORDER BY last_time ASC")
     fun allWeights(): List<Weight>
 
-    // @see [images.use.perl.org/use.perl.org/_bart/journal/33630.html] for weighted random selection -> ORDER BY -LOG(1.0 - RANDOM()) / weight
+    // @see [here](images.use.perl.org/use.perl.org/_bart/journal/33630.html) for weighted random selection -> ORDER BY -LOG(1.0 - RANDOM()) / weight
     @Query("SELECT Cards.* FROM Cards JOIN Categories JOIN Weights WHERE Cards.category_id = Categories.id AND Categories.enabled AND Cards.id = Weights.card_id ORDER BY Weights.last_time + RANDOM() * (3 * 60 * 60 * 1000) ASC LIMIT 1")
     fun randomCard(): List<DataCard>
 

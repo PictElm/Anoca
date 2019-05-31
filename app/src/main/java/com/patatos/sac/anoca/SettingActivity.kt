@@ -179,6 +179,7 @@ class SettingActivity : AppCompatActivity() {
                         .setNeutralButton(R.string.edit_delete_text) { _, _ ->
                             Executors.newSingleThreadExecutor().let { ex ->
                                 ex.execute {
+                                    db.getDao().deleteCardsFromCategory(category.id)
                                     db.getDao().deleteCategories(category)
 
                                     this@SettingActivity.reloadLists()

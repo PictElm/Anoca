@@ -36,7 +36,7 @@ class MyCardRecyclerViewAdapter(
             Toast.makeText(
                 this.context,
                 //"${DateFormat.getInstance().format(item.lastTime)} - ${item.counter}/${item.weight}",
-                "right: ${item.answeredRight} / wrong: ${item.answeredWrong} (weight: ${item.weight})",
+                "(${item.id}) right: ${item.answeredRight} / wrong: ${item.answeredWrong} (weight: ${item.weight})",
                 Toast.LENGTH_LONG
             ).show()
             true

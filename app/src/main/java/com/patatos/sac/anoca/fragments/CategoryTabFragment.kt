@@ -29,7 +29,7 @@ class CategoryTabFragment : Fragment() {
     }
 
     override fun onAttachFragment(childFragment: Fragment?) {
-        with(childFragment!! as CardFragment) { setCards(cards, onEditCard) }
+        with(childFragment!! as CardFragment) { this@with.setCards(cards, onEditCard) }
         super.onAttachFragment(childFragment)
     }
 
