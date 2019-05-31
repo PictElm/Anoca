@@ -2,7 +2,6 @@ package com.patatos.sac.anoca
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.TabLayout
@@ -47,16 +46,7 @@ class SettingActivity : AppCompatActivity() {
         // setup settings toggles
         with(sharedPref.edit()) {
             master_switch.setOnClickListener {
-                this.putBoolean(getString(R.string.master_switch_key), (it as Switch).isChecked.apply {
-                    if (this)
-                        this@SettingActivity.sendBroadcast(
-                            Intent(this@SettingActivity, Receive::class.java)
-                                .setAction(ACTION_SERVICE_DESTROYED)
-                        )
-                    else this@SettingActivity.stopService(
-                            Intent(this@SettingActivity, MyService::class.java)
-                        )
-                }).apply()
+                this.putBoolean(getString(R.string.master_switch_key), (it as Switch).isChecked).apply()
             }
             switch_twosided.setOnClickListener {
                 this.putBoolean(getString(R.string.switch_twosided_key), (it as Switch).isChecked).apply()
@@ -266,13 +256,6 @@ class SettingActivity : AppCompatActivity() {
                 it.shutdown()
             }
         }
-    }
-
-    override fun onPause() {
-        if (sharedPref.getBoolean(getString(R.string.master_switch_key), true))
-            this.startService(Intent(this, MyService::class.java))
-
-        super.onPause()
     }
 
     private fun reloadLists() {

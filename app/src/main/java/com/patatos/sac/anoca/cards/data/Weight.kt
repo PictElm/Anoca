@@ -19,7 +19,7 @@ class Weight (
     constructor(cardId: Long) : this(0, cardId, System.currentTimeMillis())
 
     override fun toString(): String {
-        return "(${this.cardId}) last: ${DateFormat.getDateInstance().format(this.lastTime)}"
+        return "(${this.cardId}) ${DateFormat.getDateInstance().format(this.lastTime)}"
     }
 
 }

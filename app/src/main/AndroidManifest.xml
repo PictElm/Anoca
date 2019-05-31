@@ -14,12 +14,6 @@
             android:theme="@style/AppTheme"
             tools:ignore="GoogleAppIndexingWarning">
 
-        <service
-                android:name="com.patatos.sac.anoca.MyService"
-                android:enabled="true"
-                android:exported="false">
-        </service>
-
         <activity
                 android:name="com.patatos.sac.anoca.SettingActivity"
                 android:label="@string/title_activity_setting"
@@ -39,19 +33,12 @@
                 android:theme="@style/AppTheme.Card">
         </activity>
 
-        <activity
-                android:name="com.patatos.sac.anoca.StartActivity"
-                android:excludeFromRecents="true"
-                android:theme="@style/AppTheme.Card">
-        </activity>
-
         <receiver
                 android:name="com.patatos.sac.anoca.Receive"
                 android:enabled="true"
                 android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="anoca.intent.action.SERVICE_DESTROYED"/>
+                <action android:name="android.intent.action.SCREEN_OFF"/>
             </intent-filter>
         </receiver>
     </application>

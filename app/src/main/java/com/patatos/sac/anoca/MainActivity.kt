@@ -15,7 +15,6 @@ import com.patatos.sac.anoca.cards.types.Associate
 import com.patatos.sac.anoca.cards.types.Multiple
 import com.patatos.sac.anoca.cards.types.TwoSided
 import com.patatos.sac.anoca.cards.types.WritingTask
-import java.text.DateFormat
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -117,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                         this.db.getDao().updateWeights(weight)
                     }
                     this.data[0].also {
+                        @Suppress("NON_EXHAUSTIVE_WHEN")
                         when (status) {
                             Status.ANSWERED_RIGHT -> it.answeredRight++
                             Status.ANSWERED_WRONG -> it.answeredWrong++

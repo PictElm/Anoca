@@ -47,16 +47,6 @@ class CardFragment : Fragment() {
 
         const val ARG_DATA_CARDS = "data-cards"
 
-        @JvmStatic
-        fun newInstance(dataCards: List<DataCard>, onEditCard: (card: DataCard) -> Unit): CardFragment {
-            return CardFragment().apply {
-                this.arguments = Bundle().apply {
-                    putParcelableArray(ARG_DATA_CARDS, dataCards.toTypedArray())
-                }
-                this.onEditCard = onEditCard
-            }
-        }
-
     }
 
 }

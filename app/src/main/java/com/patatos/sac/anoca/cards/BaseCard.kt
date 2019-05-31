@@ -10,7 +10,6 @@ import android.support.v4.widget.TextViewCompat
 import android.support.v7.app.AlertDialog
 import android.text.Layout
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
@@ -119,7 +118,7 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
     protected open fun finally(status: Status) { }
 
     protected fun toast(text: CharSequence) {
-        Toast.makeText(this.activity, text, Toast.LENGTH_LONG).show()
+        Toast.makeText(this.activity, text, Toast.LENGTH_SHORT).show()
     }
 
     private fun setLayout(@LayoutRes resource: Int): View {
