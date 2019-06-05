@@ -42,7 +42,8 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
         if (savedInstanceState != null)
             this.setContent(Content(
                 this.context as MainActivity,
-                savedInstanceState.getStringArray(MainActivity.SAVED_CONTENT_KEY)!!.toList()
+                savedInstanceState.getStringArray(MainActivity.SAVED_CONTENT_KEY)!!.toList(),
+                savedInstanceState.getString(MainActivity.SAVED_TITLE_KEY)!!
             ))
 
         this.status = Status.WAITING
@@ -51,7 +52,9 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+
         outState.putStringArray(MainActivity.SAVED_CONTENT_KEY, this.content.saveRaw())
+        outState.putString(MainActivity.SAVED_TITLE_KEY, this.content.categoryName)
 
         if (this.status != Status.DISMISSED)
             this.status = Status.SAVED
@@ -129,7 +132,9 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
     }
 
     fun baseBuilder(): AlertDialog.Builder {
-        return AlertDialog.Builder(this.activity).setNeutralButton("/") { _, _ -> this.settings() }
+        return AlertDialog.Builder(this.activity)
+            .setTitle(this.content.categoryName)
+            .setNeutralButton("/") { _, _ -> this.settings() }
     }
 
     fun baseBuilder(textPositive: String): AlertDialog.Builder {

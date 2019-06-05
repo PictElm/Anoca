@@ -62,6 +62,9 @@ interface MyDao {
     @Query("SELECT * FROM Categories ORDER BY name")
     fun allCategories(): List<Category>
 
+    @Query("SELECT * FROM Categories WHERE id = :categoryId")
+    fun getCategory(categoryId: Long): Category
+
     @Query("SELECT * FROM Categories WHERE name LIKE :name")
     fun findCategories(name: String): List<Category>
 

@@ -21,7 +21,7 @@ import kotlin.math.min
 
 import kotlin.random.Random
 
-class Content(private val activity: MainActivity, private val raw: List<String>) {
+class Content(private val activity: MainActivity, private val raw: List<String>, val categoryName: String) {
 
     private fun isOnline(id: Int): Boolean {
         return WEB_PRF.any { prf -> this.raw[id].startsWith(prf, true) }

@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         val rawData: MutableList<String> = mutableListOf()
 
         val root = this.db.getDao().randomCard()[0]
-        this.db.getDao().randomCards(root.id, root.categoryId!!,n - 1).let {
+        this.db.getDao().randomCards(root.id, root.categoryId!!, n - 1).let {
             this.data = listOf(root) + it
             this.data + List(n - it.count()) { DataCard(this.getString(R.string.hint_front_text), this.getString(R.string.hint_back_text)) }
         }.forEach {
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        return Content(this, rawData)
+        return Content(this, rawData, this.db.getDao().getCategory(root.categoryId!!).name)
     }
 
     fun answered(status: Status) {
@@ -139,7 +139,9 @@ class MainActivity : AppCompatActivity() {
 
         private const val SAVED_DATA_KEY = "saved-data"
         private const val SAVED_CARD_KEY = "saved-card"
+
         const val SAVED_CONTENT_KEY = "saved-card-content"
+        const val SAVED_TITLE_KEY = "saved-category-name"
 
     }
 
