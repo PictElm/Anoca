@@ -258,6 +258,11 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        this.finish()
+        super.onStop()
+    }
+
     private fun reloadLists() {
         //categories_pager.visibility = View.GONE
         categories_pager.postInvalidateDelayed(500)
