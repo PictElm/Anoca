@@ -1,19 +1,18 @@
 package com.patatos.sac.anoca
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.Switch
 
-import com.patatos.sac.anoca.cards.data.MyRoomDatabase
-import com.patatos.sac.anoca.cards.data.DataCard
-import com.patatos.sac.anoca.cards.data.Category
-import com.patatos.sac.anoca.cards.data.Weight
 import com.patatos.sac.anoca.fragments.PagerAdapter
 
 import kotlinx.android.synthetic.main.activity_setting.*
@@ -22,11 +21,23 @@ import kotlinx.android.synthetic.main.dialog_edit_card.view.*
 import kotlinx.android.synthetic.main.dialog_edit_category.view.*
 
 import java.util.concurrent.Executors
+import android.content.Intent
+import android.text.InputType
+import android.util.Log
+import android.view.View
+import android.widget.EditText
+import android.widget.Toast
+import com.patatos.sac.anoca.cards.data.*
+import com.patatos.sac.anoca.cards.data.csv.Csvable
+import java.io.File
+
 
 class SettingActivity : AppCompatActivity() {
 
     private lateinit var sharedPref: SharedPreferences
     private lateinit var db: MyRoomDatabase
+
+    private var onFolderSelected: ((Any) -> Unit)? = null
 
     @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -243,19 +254,36 @@ class SettingActivity : AppCompatActivity() {
                         .show()
                 }
 
-                categories_pager.adapter = PagerAdapter(
+                val pager = PagerAdapter(
                     this.supportFragmentManager,
                     allCategories,
                     selectCards,
                     onEditCategory,
                     onEditCard
                 )
-                categories_pager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(categories_tabs))
-                categories_tabs.setupWithViewPager(categories_pager)
+                this.runOnUiThread {
+                    categories_pager.adapter = pager
+                    categories_pager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(categories_tabs))
+                    categories_tabs.setupWithViewPager(categories_pager)
+                }
 
                 it.shutdown()
             }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        this.menuInflater.inflate(R.menu.menu_setting, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.action_save -> this.actionSave()
+            R.id.action_load -> this.actionLoad()
+            R.id.action_clear -> this.actionClear()
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onStop() {
@@ -263,10 +291,108 @@ class SettingActivity : AppCompatActivity() {
         super.onStop()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK)
+            this.onFolderSelected!!(data?.data!!)
+    }
+
+    private fun getFolder(function: (String) -> Unit) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            this.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), READ_REQUEST_CODE)
+            this.onFolderSelected = function
+        } else*/
+        EditText(this).also {
+            it.inputType = InputType.TYPE_CLASS_TEXT
+            AlertDialog.Builder(this)
+                .setTitle(this.getString(R.string.confirm_action_folder_text))
+                .setView(it)
+                .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ -> function(it.text.toString()) }
+                .show()
+        }
+    }
+
+    private fun writeFile(file: File, data: String) {
+        file.createNewFile()
+        file.writer().also {
+            it.write(data)
+            it.close()
+        }
+    }
+
+    private fun readFile(file: File): String {
+        return file.reader().let {
+            val r = it.readText()
+            it.close()
+            r
+        }
+    }
+
+    private fun actionSave() {
+        this.getFolder { folder ->
+            Executors.newSingleThreadExecutor().let { ex ->
+                ex.execute {
+                    this.db.getDao().also {
+                        this.writeFile(File(folder, this.getString(R.string.csv_cards_file)), Csvable.csvAll(";", "\"", it.getCards()))
+                        this.writeFile(File(folder, this.getString(R.string.csv_categories_file)), Csvable.csvAll(";", "\"", it.getCategories()))
+                        this.writeFile(File(folder, this.getString(R.string.csv_weights_file)), Csvable.csvAll(";", "\"", it.getWeights()))
+                    }
+                    this.runOnUiThread { Toast.makeText(this, this.getString(R.string.confirm_done_text), Toast.LENGTH_LONG).show() }
+                    this.reloadLists()
+                    ex.shutdown()
+                }
+            }
+        }
+    }
+
+    private fun actionLoad() {
+        this.getFolder { folder ->
+            Executors.newSingleThreadExecutor().let { ex ->
+                ex.execute {
+                    this.db.getDao().also {
+                        it.setCards(this.readFile(File(folder, this.getString(R.string.csv_cards_file))).split("\n").let { l -> List(l.count() - 1) { k -> DataCard.fromCsv(";", "\"", l[k]) } } )
+                        it.setCategories(this.readFile(File(folder, this.getString(R.string.csv_categories_file))).split("\n").let { l -> List(l.count() - 1) { k -> Category.fromCsv(";", "\"", l[k]) } } )
+                        it.setWeights(this.readFile(File(folder, this.getString(R.string.csv_weights_file))).split("\n").let { l -> List(l.count() - 1) { k -> Weight.fromCsv(";", "\"", l[k]) } } )
+                    }
+                    this.runOnUiThread { Toast.makeText(this, this.getString(R.string.confirm_done_text), Toast.LENGTH_LONG).show() }
+                    this.reloadLists()
+                    ex.shutdown()
+                }
+            }
+        }
+    }
+
+    private fun actionClear() {
+        AlertDialog.Builder(this)
+            .setTitle(this.getText(R.string.confirm_action_clear_text))
+            .setNegativeButton(this.getText(R.string.confirm_negative_text)) { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ ->
+                Executors.newSingleThreadExecutor().let { ex ->
+                    ex.execute {
+                        this.db.getDao().also {
+                            it.clearCards()
+                            it.clearCategories()
+                            it.clearWeights()
+                        }
+                        this.runOnUiThread { Toast.makeText(this, this.getString(R.string.confirm_done_text), Toast.LENGTH_LONG).show() }
+                        this.reloadLists()
+                        ex.shutdown()
+                    }
+                }
+            }
+            .show()
+    }
+
     private fun reloadLists() {
-        //categories_pager.visibility = View.GONE
-        categories_pager.postInvalidateDelayed(500)
-        //categories_pager.visibility = View.VISIBLE
+        this.runOnUiThread {
+            categories_pager.visibility = View.GONE
+            categories_pager.postInvalidateDelayed(500)
+            categories_pager.visibility = View.VISIBLE
+            Log.i("anoca::reloaded", categories_pager.toString())
+        }
+    }
+
+    companion object {
+        const val READ_REQUEST_CODE = 42
     }
 
 }

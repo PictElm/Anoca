@@ -10,10 +10,11 @@ import android.support.annotation.NonNull
 
 import com.patatos.sac.anoca.cards.Content
 import com.patatos.sac.anoca.cards.CustomCardParse
+import com.patatos.sac.anoca.cards.data.csv.Csvable
 
 import kotlin.math.min
 
-    @Entity(tableName = "Cards")
+@Entity(tableName = "Cards")
 class DataCard (
         @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
 
@@ -28,10 +29,9 @@ class DataCard (
 
         @ColumnInfo(name = "category_id") var categoryId: Long?,
         @Ignore var categoryName: String?
-    ) : Parcelable {
+    ) : Parcelable, Csvable {
 
-    @Ignore
-    constructor(parcel: Parcel) : this(
+    @Ignore constructor(parcel: Parcel) : this(
         parcel.readLong(),
         parcel.readString()!!,
         parcel.readString()!!,
@@ -43,8 +43,7 @@ class DataCard (
         parcel.readString()!!
     )
 
-    @Ignore
-    constructor(dataFRaw: String, dataBRaw: String, weight: Int = 0, category: Category? = null) : this(
+    @Ignore constructor(dataFRaw: String, dataBRaw: String, weight: Int = 0, category: Category? = null) : this(
         0, dataFRaw, dataBRaw,
         0, 0,
         true, weight,
@@ -67,6 +66,10 @@ class DataCard (
 
     override fun describeContents(): Int {
         return 0
+    }
+
+    override fun csv(s: String, q: String): String {
+        return Csvable.dataToCsv(s, q, this.id, this.dataFRaw, this.dataBRaw, this.answeredRight, this.answeredWrong, this.canIncluded, this.weight, this.categoryId!!)
     }
 
     private fun getSimplifiedData(c: String): String {
@@ -95,6 +98,10 @@ class DataCard (
 
         override fun newArray(size: Int): Array<DataCard?> {
             return arrayOfNulls(size)
+        }
+
+        fun fromCsv(s: String, q: String, raw: String): DataCard {
+            return Csvable.csvToData(s, q, raw).let { DataCard(it[0].toLong(), it[1], it[2], it[3].toInt(), it[4].toInt(), it[5].toBoolean(), it[6].toInt(), it[7].toLong(), null) }
         }
 
     }

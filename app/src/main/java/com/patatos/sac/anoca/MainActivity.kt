@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             Executors.newSingleThreadExecutor().let {
                 it.execute {
                     this.card = this.randomCard().also { card ->
-                        card!!.setContent(this.randomContent(card.contentSize ?: 1))
+                        card!!.setContent(this.randomContent(card.contentSize ?: 1) ?: return@also)
                         card.show(this.supportFragmentManager, "card")
                     }
                     it.shutdown()
@@ -88,10 +88,10 @@ class MainActivity : AppCompatActivity() {
         return cards.random()
     }
 
-    private fun randomContent(n: Int): Content {
+    private fun randomContent(n: Int): Content? {
         val rawData: MutableList<String> = mutableListOf()
 
-        val root = this.db.getDao().randomCard()[0]
+        val root = this.db.getDao().randomCard().firstOrNull() ?: return null
         this.db.getDao().randomCards(root.id, root.categoryId!!, n - 1).let {
             this.data = listOf(root) + it
             this.data + List(n - it.count()) { DataCard(this.getString(R.string.hint_front_text), this.getString(R.string.hint_back_text)) }

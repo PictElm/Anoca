@@ -4,6 +4,8 @@
           package="com.patatos.sac.anoca">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
             android:allowBackup="true"
@@ -13,28 +15,27 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             tools:ignore="GoogleAppIndexingWarning">
-
         <activity
-                android:name="com.patatos.sac.anoca.SettingActivity"
+                android:name=".SettingActivity"
                 android:label="@string/title_activity_setting"
                 android:screenOrientation="portrait"
                 android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
         <activity
-                android:name="com.patatos.sac.anoca.MainActivity"
+                android:name=".MainActivity"
                 android:excludeFromRecents="true"
-                android:launchMode="singleInstance"
                 android:label="@string/title_activity_main"
+                android:launchMode="singleInstance"
                 android:theme="@style/AppTheme.Card">
         </activity>
 
         <receiver
-                android:name="com.patatos.sac.anoca.Receive"
+                android:name=".Receive"
                 android:enabled="true"
                 android:exported="true">
             <intent-filter>

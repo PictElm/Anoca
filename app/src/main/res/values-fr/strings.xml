@@ -23,4 +23,12 @@
     <string name="edit_card_title_text">Edition d\'un carte</string>
     <string name="edit_category_title_text">Edition d\'une catégorie</string>
     <string name="hint_weight_text">Importance</string>
+    <string name="menu_clear">Nettoyer</string>
+    <string name="menu_load">Charger</string>
+    <string name="menu_save">Sauvegarder</string>
+    <string name="confirm_action_clear_text">Vidér la base de données ?</string>
+    <string name="confirm_action_folder_text">Sélectionner le dossier</string>
+    <string name="confirm_negative_text">Non</string>
+    <string name="confirm_positive_text">Oui</string>
+    <string name="confirm_done_text">Fait</string>
 </resources>
