@@ -1,12 +1,16 @@
 package com.patatos.sac.anoca
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.TabLayout
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
@@ -40,7 +44,8 @@ class SettingActivity : AppCompatActivity() {
     private lateinit var sharedPref: SharedPreferences
     private lateinit var db: MyRoomDatabase
 
-    private var onFolderSelected: ((Any) -> Unit)? = null
+    private var onFolderSelected: ((String) -> Unit)? = null
+    private var onPermissionsAnswered: ((Boolean) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,9 +107,14 @@ class SettingActivity : AppCompatActivity() {
         super.onStop()
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == PERMISSION_REQUEST_CODE)
+            this.onPermissionsAnswered!!(grantResults.all { it == PackageManager.PERMISSION_GRANTED })
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK)
-            this.onFolderSelected!!(data?.data!!)
+        if (requestCode == FOLDER_REQUEST_CODE && resultCode == Activity.RESULT_OK)
+            this.onFolderSelected!!(data?.data!!.path!!)
     }
 
     private fun setupAddCategory() {
@@ -311,18 +321,32 @@ class SettingActivity : AppCompatActivity() {
         )
     }
 
-    private fun askFolder(function: (String) -> Unit) {
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), READ_REQUEST_CODE)
-            this.onFolderSelected = function
-        } else*/
-        EditText(this).also {
-            it.inputType = InputType.TYPE_CLASS_TEXT
-            AlertDialog.Builder(this)
-                .setTitle(this.getString(R.string.confirm_action_folder_text))
-                .setView(it)
-                .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ -> function(it.text.toString()) }
-                .show()
+    private fun askPermissions(vararg permissions: String, then: (Boolean) -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val notGranted = permissions.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+            if (notGranted.isNotEmpty()) {
+                this.requestPermissions(notGranted.toTypedArray(), PERMISSION_REQUEST_CODE)
+                this.onPermissionsAnswered = then
+            } else then(true)
+        } else then(true)
+    }
+
+    private fun askFolder(then: (String) -> Unit) {
+        this.askPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { granted ->
+            if (granted) {
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                this.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), FOLDER_REQUEST_CODE)
+                this.onFolderSelected = then
+                } else*/
+                EditText(this).also {
+                    it.inputType = InputType.TYPE_CLASS_TEXT
+                    AlertDialog.Builder(this)
+                        .setTitle(this.getString(R.string.confirm_action_folder_text))
+                        .setView(it)
+                        .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ -> then(it.text.toString()) }
+                        .show()
+                }
+            } else Toast.makeText(this, "Read and Write permission are required!", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -426,7 +450,10 @@ class SettingActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val READ_REQUEST_CODE = 42
+
+        const val FOLDER_REQUEST_CODE = 42
+        const val PERMISSION_REQUEST_CODE = 42
+
     }
 
 }
