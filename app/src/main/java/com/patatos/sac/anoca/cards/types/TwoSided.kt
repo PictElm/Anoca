@@ -5,7 +5,6 @@ import android.view.View
 
 import com.patatos.sac.anoca.R
 import com.patatos.sac.anoca.cards.BaseCard
-import com.patatos.sac.anoca.cards.Status
 
 import kotlinx.android.synthetic.main.card_twosided.view.*
 import kotlin.random.Random
@@ -30,7 +29,7 @@ class TwoSided : BaseCard(1) {
             this.layout.back.visibility = View.GONE
         }
 
-        super.setStatus(Status.ANSWERED)
+        super.setStatus(Companion.Status.ANSWERED)
 
         return builder
     }

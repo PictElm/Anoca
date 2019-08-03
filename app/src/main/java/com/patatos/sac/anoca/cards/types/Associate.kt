@@ -5,7 +5,6 @@ import android.widget.Button
 
 import com.patatos.sac.anoca.R
 import com.patatos.sac.anoca.cards.BaseCard
-import com.patatos.sac.anoca.cards.Status
 
 import kotlinx.android.synthetic.main.card_associate.view.*
 import kotlin.random.Random
@@ -36,7 +35,7 @@ class Associate : BaseCard(2) {
                     buttons[k].isClickable = false
                     buttons[k].isEnabled = false
                     selected = -1
-                    if (++progress == 2) super.submitStatus(Status.ANSWERED_RIGHT)
+                    if (++progress == 2) super.submitStatus(Companion.Status.ANSWERED_RIGHT)
                 } else {
                     buttons[selected].isClickable = true
                     buttons[selected].isEnabled = true

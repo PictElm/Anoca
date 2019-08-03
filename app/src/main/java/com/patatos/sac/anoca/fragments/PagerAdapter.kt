@@ -8,12 +8,12 @@ import com.patatos.sac.anoca.cards.data.Category
 import com.patatos.sac.anoca.cards.data.DataCard
 
 class PagerAdapter(
-        fragmentManager: FragmentManager,
-        private val categories: List<Category>,
-        selectCards: (category_id: Long) -> List<DataCard>,
-        onEditCategory: (category: Category) -> Unit,
-        onEditCard: (card: DataCard) -> Unit
-    ) : FragmentStatePagerAdapter(fragmentManager) {
+    fragmentManager: FragmentManager,
+    private val categories: List<Category>,
+    selectCards: (category_id: Long) -> List<DataCard>,
+    onEditCategory: (category: Category) -> Unit,
+    onEditCard: (card: DataCard) -> Unit
+) : FragmentStatePagerAdapter(fragmentManager) {
 
     private val categoryTabFragments: MutableList<CategoryTabFragment> = mutableListOf()
 

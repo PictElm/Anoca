@@ -8,14 +8,15 @@ import android.support.annotation.NonNull
 import com.patatos.sac.anoca.cards.data.csv.Csvable
 
 @Entity(tableName = "Categories")
-class Category (
-        @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
+class Category(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
 
-        @ColumnInfo(name = "name") @NonNull var name: String,
-        @ColumnInfo(name = "enabled") @NonNull var enabled: Boolean
-    ) : Csvable {
+    @ColumnInfo(name = "name") @NonNull var name: String,
+    @ColumnInfo(name = "enabled") @NonNull var enabled: Boolean
+) : Csvable {
 
-    @Ignore constructor(name: String) : this(0, name, true)
+    @Ignore
+    constructor(name: String) : this(0, name, true)
 
     override fun toString(): String {
         return this.name

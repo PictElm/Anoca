@@ -9,7 +9,6 @@ import android.view.inputmethod.EditorInfo
 
 import com.patatos.sac.anoca.R
 import com.patatos.sac.anoca.cards.BaseCard
-import com.patatos.sac.anoca.cards.Status
 
 import kotlinx.android.synthetic.main.card_writingtask.view.*
 import kotlin.random.Random
@@ -43,18 +42,18 @@ class WritingTask : BaseCard(1) {
     override fun positive() {
         super.submitStatus(
             if (super.stringMatch(this.layout.answer.text.toString(), this.answerMatch))
-                Status.ANSWERED_RIGHT
-            else Status.ANSWERED_WRONG
+                Companion.Status.ANSWERED_RIGHT
+            else Companion.Status.ANSWERED_WRONG
         )
     }
 
     override fun negative() {
-        super.submitStatus(Status.ANSWERED)
+        super.submitStatus(Companion.Status.ANSWERED)
     }
 
 
-    override fun finally(status: Status) {
-        if (status == Status.ANSWERED_RIGHT)
+    override fun finally(status: Companion.Status) {
+        if (status == Companion.Status.ANSWERED_RIGHT)
             super.toast(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml("&check;", 0)
                 else SpannedString("V")

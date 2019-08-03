@@ -14,10 +14,10 @@ import com.patatos.sac.anoca.cards.data.DataCard
 import kotlinx.android.synthetic.main.fragment_card.view.*
 
 class MyCardRecyclerViewAdapter(
-        private val context: Context,
-        private val cards: List<DataCard>?,
-        private val onEditCard: (card: DataCard) -> Unit
-    ) : RecyclerView.Adapter<MyCardRecyclerViewAdapter.ViewHolder>() {
+    private val context: Context,
+    private val cards: List<DataCard>?,
+    private val onEditCard: (card: DataCard) -> Unit
+) : RecyclerView.Adapter<MyCardRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)

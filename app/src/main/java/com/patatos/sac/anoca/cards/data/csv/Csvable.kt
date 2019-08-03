@@ -30,7 +30,7 @@ interface Csvable {
         }*/
 
         fun dataToCsv(s: String, q: String, vararg data: Any): String {
-            return List(data.count()) { q + data[it].toString().replace("$q$s$q", s) + q } .joinToString(s)
+            return List(data.count()) { q + data[it].toString().replace("$q$s$q", s) + q }.joinToString(s)
         }
 
         fun csvToData(s: String, q: String, raw: String): List<String> {
@@ -38,7 +38,14 @@ interface Csvable {
         }
 
         fun csvAll(s: String, q: String, o: List<Csvable>, names: String = ""): String {
-            return o.fold(StringBuilder(if (names != "") "$names\n" else "")) { acc, it -> acc.append(it.csv(s, q) + "\n") } .toString()
+            return o.fold(StringBuilder(if (names != "") "$names\n" else "")) { acc, it ->
+                acc.append(
+                    it.csv(
+                        s,
+                        q
+                    ) + "\n"
+                )
+            }.toString()
         }
 
     }

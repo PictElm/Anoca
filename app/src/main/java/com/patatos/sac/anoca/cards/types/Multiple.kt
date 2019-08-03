@@ -9,7 +9,6 @@ import android.widget.Button
 
 import com.patatos.sac.anoca.R
 import com.patatos.sac.anoca.cards.BaseCard
-import com.patatos.sac.anoca.cards.Status
 
 import kotlinx.android.synthetic.main.card_multiple.view.*
 import kotlin.random.Random
@@ -41,8 +40,8 @@ class Multiple : BaseCard(4) {
             super.adaptContent(b, association[k]).let {
                 it.setOnClickListener {
                     if (association[k] == order.second)
-                        super.submitStatus(Status.ANSWERED_RIGHT)
-                    else super.submitStatus(Status.ANSWERED_WRONG)
+                        super.submitStatus(Companion.Status.ANSWERED_RIGHT)
+                    else super.submitStatus(Companion.Status.ANSWERED_WRONG)
                 }
                 if (association[k] == order.second)
                     this.answer = it.text
@@ -52,8 +51,8 @@ class Multiple : BaseCard(4) {
         return builder
     }
 
-    override fun finally(status: Status) {
-        if (status == Status.ANSWERED_RIGHT)
+    override fun finally(status: Companion.Status) {
+        if (status == Companion.Status.ANSWERED_RIGHT)
             super.toast(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml("&check;", 0)
                 else SpannedString("V")

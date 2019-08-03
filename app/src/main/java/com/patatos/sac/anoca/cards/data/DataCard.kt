@@ -15,23 +15,24 @@ import com.patatos.sac.anoca.cards.data.csv.Csvable
 import kotlin.math.min
 
 @Entity(tableName = "Cards")
-class DataCard (
-        @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
+class DataCard(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
 
-        @ColumnInfo(name = "data_f") @NonNull var dataFRaw: String,
-        @ColumnInfo(name = "data_b") @NonNull var dataBRaw: String,
+    @ColumnInfo(name = "data_f") @NonNull var dataFRaw: String,
+    @ColumnInfo(name = "data_b") @NonNull var dataBRaw: String,
 
-        @ColumnInfo(name = "answered_right") @NonNull var answeredRight: Int,
-        @ColumnInfo(name = "answered_wrong") @NonNull var answeredWrong: Int,
+    @ColumnInfo(name = "answered_right") @NonNull var answeredRight: Int,
+    @ColumnInfo(name = "answered_wrong") @NonNull var answeredWrong: Int,
 
-        @ColumnInfo(name = "can_included") @NonNull var canIncluded: Boolean,
-        @ColumnInfo(name = "weight") @NonNull var weight: Int,
+    @ColumnInfo(name = "can_included") @NonNull var canIncluded: Boolean,
+    @ColumnInfo(name = "weight") @NonNull var weight: Int,
 
-        @ColumnInfo(name = "category_id") var categoryId: Long?,
-        @Ignore var categoryName: String?
-    ) : Parcelable, Csvable {
+    @ColumnInfo(name = "category_id") var categoryId: Long?,
+    @Ignore var categoryName: String?
+) : Parcelable, Csvable {
 
-    @Ignore constructor(parcel: Parcel) : this(
+    @Ignore
+    constructor(parcel: Parcel) : this(
         parcel.readLong(),
         parcel.readString()!!,
         parcel.readString()!!,
@@ -43,7 +44,8 @@ class DataCard (
         parcel.readString()!!
     )
 
-    @Ignore constructor(dataFRaw: String, dataBRaw: String, weight: Int = 0, category: Category? = null) : this(
+    @Ignore
+    constructor(dataFRaw: String, dataBRaw: String, weight: Int = 0, category: Category? = null) : this(
         0, dataFRaw, dataBRaw,
         0, 0,
         true, weight,
@@ -69,7 +71,18 @@ class DataCard (
     }
 
     override fun csv(s: String, q: String): String {
-        return Csvable.dataToCsv(s, q, this.id, this.dataFRaw, this.dataBRaw, this.answeredRight, this.answeredWrong, this.canIncluded, this.weight, this.categoryId!!)
+        return Csvable.dataToCsv(
+            s,
+            q,
+            this.id,
+            this.dataFRaw,
+            this.dataBRaw,
+            this.answeredRight,
+            this.answeredWrong,
+            this.canIncluded,
+            this.weight,
+            this.categoryId!!
+        )
     }
 
     private fun getSimplifiedData(c: String): String {
@@ -101,7 +114,19 @@ class DataCard (
         }
 
         fun fromCsv(s: String, q: String, raw: String): DataCard {
-            return Csvable.csvToData(s, q, raw).let { DataCard(it[0].toLong(), it[1], it[2], it[3].toInt(), it[4].toInt(), it[5].toBoolean(), it[6].toInt(), it[7].toLong(), null) }
+            return Csvable.csvToData(s, q, raw).let {
+                DataCard(
+                    it[0].toLong(),
+                    it[1],
+                    it[2],
+                    it[3].toInt(),
+                    it[4].toInt(),
+                    it[5].toBoolean(),
+                    it[6].toInt(),
+                    it[7].toLong(),
+                    null
+                )
+            }
         }
 
     }

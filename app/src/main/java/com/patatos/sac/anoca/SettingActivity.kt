@@ -13,14 +13,10 @@ import android.support.design.widget.TabLayout
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
-import android.text.InputType
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.Switch
 import android.widget.Toast
 
 import com.patatos.sac.anoca.cards.data.Category
@@ -35,6 +31,8 @@ import kotlinx.android.synthetic.main.content_setting.*
 import kotlinx.android.synthetic.main.dialog_edit_card.view.*
 import kotlinx.android.synthetic.main.dialog_edit_category.view.*
 
+import lib.folderpicker.FolderPicker
+
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -43,6 +41,11 @@ class SettingActivity : AppCompatActivity() {
 
     private lateinit var sharedPref: SharedPreferences
     private lateinit var db: MyRoomDatabase
+
+    private var savedLastTab = 0
+    private var isPagerInitialized = false
+
+    private var shouldReloadLists = true
 
     private var onFolderSelected: ((String) -> Unit)? = null
     private var onPermissionsAnswered: ((Boolean) -> Unit)? = null
@@ -53,30 +56,23 @@ class SettingActivity : AppCompatActivity() {
         this.setContentView(R.layout.activity_setting)
         this.setSupportActionBar(toolbar)
 
-        sharedPref = this.getSharedPreferences(this.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        this.sharedPref = this.getSharedPreferences(this.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        this.db = MyRoomDatabase.getInstance(this)
 
-        master_switch.isChecked = sharedPref.getBoolean(getString(R.string.master_switch_key), true)
-        switch_twosided.isChecked = sharedPref.getBoolean(getString(R.string.switch_twosided_key), true)
-        switch_writingtask.isChecked = sharedPref.getBoolean(getString(R.string.switch_writingtask_key), true)
-        switch_multiple.isChecked = sharedPref.getBoolean(getString(R.string.switch_multiple_key), true)
-        switch_associate.isChecked = sharedPref.getBoolean(getString(R.string.switch_associate_key), true)
+        this.savedLastTab = this.sharedPref.getInt(this.getString(R.string.last_tab_key), 0)
 
         // setup settings toggles
-        with(sharedPref.edit()) {
-            master_switch.setOnClickListener {
-                this.putBoolean(getString(R.string.master_switch_key), (it as Switch).isChecked).apply()
-            }
-            switch_twosided.setOnClickListener {
-                this.putBoolean(getString(R.string.switch_twosided_key), (it as Switch).isChecked).apply()
-            }
-            switch_writingtask.setOnClickListener {
-                this.putBoolean(getString(R.string.switch_writingtask_key), (it as Switch).isChecked).apply()
-            }
-            switch_multiple.setOnClickListener {
-                this.putBoolean(getString(R.string.switch_multiple_key), (it as Switch).isChecked).apply()
-            }
-            switch_associate.setOnClickListener {
-                this.putBoolean(getString(R.string.switch_associate_key), (it as Switch).isChecked).apply()
+        this.sharedPref.edit().also { editor ->
+            listOf(
+                Pair(master_switch, R.string.master_switch_key),
+                Pair(switch_twosided, R.string.switch_twosided_key),
+                Pair(switch_writingtask, R.string.switch_writingtask_key),
+                Pair(switch_multiple, R.string.switch_multiple_key),
+                Pair(switch_associate, R.string.switch_associate_key)
+            ).forEach { p ->
+                val key = this.getString(p.second)
+                p.first.isChecked = this.sharedPref.getBoolean(key, true)
+                p.first.setOnClickListener { editor.putBoolean(key, p.first.isChecked).apply() }
             }
         }
     }
@@ -84,8 +80,17 @@ class SettingActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        // setup categories and cards lists related fragments
-        this.updateLists()
+        if (this.shouldReloadLists) {
+            this.reloadLists()
+            this.shouldReloadLists = false
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        this.savedLastTab = categories_pager.currentItem
+        this.sharedPref.edit().putInt(this.getString(R.string.last_tab_key), this.savedLastTab).apply()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -102,11 +107,6 @@ class SettingActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onStop() {
-        this.finish()
-        super.onStop()
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == PERMISSION_REQUEST_CODE)
             this.onPermissionsAnswered!!(grantResults.all { it == PackageManager.PERMISSION_GRANTED })
@@ -114,7 +114,7 @@ class SettingActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == FOLDER_REQUEST_CODE && resultCode == Activity.RESULT_OK)
-            this.onFolderSelected!!(data?.data!!.path!!)
+            this.onFolderSelected!!(data?.extras?.getString("data")!!)
     }
 
     private fun setupAddCategory() {
@@ -124,15 +124,12 @@ class SettingActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setView(layout)
                 .setTitle(this.getString(R.string.add_category_title_text))
                 .setPositiveButton(R.string.edit_validate_text) { _, _ ->
-                    Executors.newSingleThreadExecutor().let { ex ->
-                        ex.execute {
-                            this.db.getDao().insertCategories(Category(
+                    this.updateListsAfter {
+                        this.db.getDao().insertCategories(
+                            Category(
                                 layout.edit_name.text.toString().replace(Regex("[.?!]"), "_")
-                            ))
-
-                            this@SettingActivity.reloadLists()
-                            ex.shutdown()
-                        }
+                            )
+                        )
                     }
                 }
                 .setNegativeButton(R.string.edit_cancel_text) { dialog, _ -> dialog.cancel() }
@@ -158,22 +155,17 @@ class SettingActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setView(layout)
                 .setTitle(this.getString(R.string.add_card_title_text))
                 .setPositiveButton(R.string.edit_validate_text) { _, _ ->
-                    Executors.newSingleThreadExecutor().let { ex ->
-                        ex.execute {
-                            val w = layout.edit_weight.text.toString().toInt().let { w -> if(w < 0) 0 else w }
-                            val id = this.db.getDao().insertCards(
-                                DataCard(
-                                    layout.edit_front.text.toString(),
-                                    layout.edit_back.text.toString(),
-                                    w,
-                                    layout.edit_category.selectedItem as Category
-                                )
-                            )[0]
-                            this.db.getDao().insertWeights(List(w) { Weight(id) })
-
-                            this@SettingActivity.reloadLists()
-                            ex.shutdown()
-                        }
+                    this.updateListsAfter {
+                        val w = layout.edit_weight.text.toString().toInt().let { w -> if (w < 0) 0 else w }
+                        val id = this.db.getDao().insertCards(
+                            DataCard(
+                                layout.edit_front.text.toString(),
+                                layout.edit_back.text.toString(),
+                                w,
+                                layout.edit_category.selectedItem as Category
+                            )
+                        )[0]
+                        this.db.getDao().insertWeights(List(w) { Weight(id) })
                     }
                 }
                 .setNegativeButton(R.string.edit_cancel_text) { dialog, _ -> dialog.cancel() }
@@ -223,27 +215,17 @@ class SettingActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setView(layout)
                 .setTitle(this.getString(R.string.edit_category_title_text))
                 .setPositiveButton(R.string.edit_validate_text) { _, _ ->
-                    Executors.newSingleThreadExecutor().let { ex ->
-                        ex.execute {
-                            category.name = layout.edit_name.text.toString().replace(Regex("[.?!]"), "_")
-                            category.enabled = layout.switch_category.isChecked
-                            this.db.getDao().updateCategories(category)
-
-                            this@SettingActivity.reloadLists()
-                            ex.shutdown()
-                        }
+                    this.updateListsAfter {
+                        category.name = layout.edit_name.text.toString().replace(Regex("[.?!]"), "_")
+                        category.enabled = layout.switch_category.isChecked
+                        this.db.getDao().updateCategories(category)
                     }
                 }
                 .setNegativeButton(R.string.edit_cancel_text) { dialog, _ -> dialog.cancel() }
                 .setNeutralButton(R.string.edit_delete_text) { _, _ ->
-                    Executors.newSingleThreadExecutor().let { ex ->
-                        ex.execute {
-                            this.db.getDao().deleteCardsFromCategory(category.id)
-                            this.db.getDao().deleteCategories(category)
-
-                            this@SettingActivity.reloadLists()
-                            ex.shutdown()
-                        }
+                    this.updateListsAfter {
+                        this.db.getDao().deleteCardsFromCategory(category.id)
+                        this.db.getDao().deleteCategories(category)
                     }
                 }
                 .create()
@@ -273,39 +255,29 @@ class SettingActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setView(layout)
                 .setTitle(this.getString(R.string.edit_card_title_text))
                 .setPositiveButton(R.string.edit_validate_text) { _, _ ->
-                    Executors.newSingleThreadExecutor().let { ex ->
-                        ex.execute {
-                            val w = layout.edit_weight.text.toString().toInt().let { w -> if(w < 0) 0 else w }
-                            var toAdd = w - card.weight
-                            if (toAdd < 0) {
-                                this.db.getDao().deleteWeights(this.db.getDao().firstWeights(card.id, card.weight))
-                                toAdd = w
-                            }
-
-                            card.dataFRaw = layout.edit_front.text.toString()
-                            card.dataBRaw = layout.edit_back.text.toString()
-                            card.canIncluded = layout.switch_canincluded.isChecked
-                            card.weight = w
-                            card.categoryId = (layout.edit_category.selectedItem as Category).id
-                            this.db.getDao().updateCards(card)
-
-                            if (0 < toAdd)
-                                this.db.getDao().insertWeights(List(toAdd) { Weight(card.id) })
-
-                            this@SettingActivity.reloadLists()
-                            ex.shutdown()
+                    this.updateListsAfter {
+                        val w = layout.edit_weight.text.toString().toInt().let { w -> if (w < 0) 0 else w }
+                        var toAdd = w - card.weight
+                        if (toAdd < 0) {
+                            this.db.getDao().deleteWeights(this.db.getDao().firstWeights(card.id, card.weight))
+                            toAdd = w
                         }
+
+                        card.dataFRaw = layout.edit_front.text.toString()
+                        card.dataBRaw = layout.edit_back.text.toString()
+                        card.canIncluded = layout.switch_canincluded.isChecked
+                        card.weight = w
+                        card.categoryId = (layout.edit_category.selectedItem as Category).id
+                        this.db.getDao().updateCards(card)
+
+                        if (0 < toAdd)
+                            this.db.getDao().insertWeights(List(toAdd) { Weight(card.id) })
                     }
                 }
                 .setNegativeButton(R.string.edit_cancel_text) { dialog, _ -> dialog.cancel() }
                 .setNeutralButton(R.string.edit_delete_text) { _, _ ->
-                    Executors.newSingleThreadExecutor().let { ex ->
-                        ex.execute {
-                            this.db.getDao().deleteCards(card)
-
-                            this@SettingActivity.reloadLists()
-                            ex.shutdown()
-                        }
+                    this.updateListsAfter {
+                        this.db.getDao().deleteCards(card)
                     }
                 }
                 .create()
@@ -323,7 +295,9 @@ class SettingActivity : AppCompatActivity() {
 
     private fun askPermissions(vararg permissions: String, then: (Boolean) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val notGranted = permissions.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+            val notGranted = permissions.filter {
+                ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+            }
             if (notGranted.isNotEmpty()) {
                 this.requestPermissions(notGranted.toTypedArray(), PERMISSION_REQUEST_CODE)
                 this.onPermissionsAnswered = then
@@ -331,22 +305,31 @@ class SettingActivity : AppCompatActivity() {
         } else then(true)
     }
 
-    private fun askFolder(then: (String) -> Unit) {
-        this.askPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { granted ->
+    private fun askFolder(title: String, then: (String) -> Unit) {
+        this.askPermissions(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) { granted ->
             if (granted) {
-                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                this.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), FOLDER_REQUEST_CODE)
+                this.startActivityForResult(
+                    Intent(this, FolderPicker::class.java)
+                        .putExtra("title", title),
+                    FOLDER_REQUEST_CODE
+                )
                 this.onFolderSelected = then
-                } else*/
-                EditText(this).also {
+
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    this.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), FOLDER_REQUEST_CODE)
+                    this.onFolderSelected = then
+                } else EditText(this).also {
                     it.inputType = InputType.TYPE_CLASS_TEXT
                     AlertDialog.Builder(this)
                         .setTitle(this.getString(R.string.confirm_action_folder_text))
                         .setView(it)
                         .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ -> then(it.text.toString()) }
                         .show()
-                }
-            } else Toast.makeText(this, "Read and Write permission are required!", Toast.LENGTH_LONG).show()
+                }*/
+            } else Toast.makeText(this, this.getString(R.string.permission_required_text), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -366,35 +349,68 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
+    // TODO: rework
     private fun actionSave() {
-        this.askFolder { folder ->
-            Executors.newSingleThreadExecutor().let { ex ->
-                ex.execute {
-                    this.db.getDao().also {
-                        this.writeFile(File(folder, this.getString(R.string.csv_cards_file)), Csvable.csvAll(";", "\"", it.getCards()))
-                        this.writeFile(File(folder, this.getString(R.string.csv_categories_file)), Csvable.csvAll(";", "\"", it.getCategories()))
-                        this.writeFile(File(folder, this.getString(R.string.csv_weights_file)), Csvable.csvAll(";", "\"", it.getWeights()))
-                    }
-                    this.runOnUiThread { Toast.makeText(this, this.getString(R.string.confirm_done_text), Toast.LENGTH_LONG).show() }
-                    this.reloadLists()
-                    ex.shutdown()
+        this.askFolder(this.getString(R.string.save_title_text)) { folder ->
+            this.updateListsAfter {
+                this.db.getDao().also {
+                    this.writeFile(
+                        File(folder, this.getString(R.string.csv_cards_file)),
+                        Csvable.csvAll(";", "\"", it.getCards())
+                    )
+                    this.writeFile(
+                        File(folder, this.getString(R.string.csv_categories_file)),
+                        Csvable.csvAll(";", "\"", it.getCategories())
+                    )
+                    this.writeFile(
+                        File(folder, this.getString(R.string.csv_weights_file)),
+                        Csvable.csvAll(";", "\"", it.getWeights())
+                    )
+                }
+                this.runOnUiThread {
+                    Toast.makeText(
+                        this,
+                        this.getString(R.string.confirm_done_text),
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
     }
 
+    // TODO: rework
     private fun actionLoad() {
-        this.askFolder { folder ->
-            Executors.newSingleThreadExecutor().let { ex ->
-                ex.execute {
-                    this.db.getDao().also {
-                        it.setCards(this.readFile(File(folder, this.getString(R.string.csv_cards_file))).split("\n").let { l -> List(l.count() - 1) { k -> DataCard.fromCsv(";", "\"", l[k]) } } )
-                        it.setCategories(this.readFile(File(folder, this.getString(R.string.csv_categories_file))).split("\n").let { l -> List(l.count() - 1) { k -> Category.fromCsv(";", "\"", l[k]) } } )
-                        it.setWeights(this.readFile(File(folder, this.getString(R.string.csv_weights_file))).split("\n").let { l -> List(l.count() - 1) { k -> Weight.fromCsv(";", "\"", l[k]) } } )
-                    }
-                    this.runOnUiThread { Toast.makeText(this, this.getString(R.string.confirm_done_text), Toast.LENGTH_LONG).show() }
-                    this.reloadLists()
-                    ex.shutdown()
+        this.askFolder(this.getString(R.string.load_title_text)) { folder ->
+            this.updateListsAfter {
+                this.db.getDao().also {
+                    it.setCards(
+                        this.readFile(
+                            File(
+                                folder,
+                                this.getString(R.string.csv_cards_file)
+                            )
+                        ).split("\n").let { l -> List(l.count() - 1) { k -> DataCard.fromCsv(";", "\"", l[k]) } })
+                    it.setCategories(
+                        this.readFile(
+                            File(
+                                folder,
+                                this.getString(R.string.csv_categories_file)
+                            )
+                        ).split("\n").let { l -> List(l.count() - 1) { k -> Category.fromCsv(";", "\"", l[k]) } })
+                    it.setWeights(
+                        this.readFile(
+                            File(
+                                folder,
+                                this.getString(R.string.csv_weights_file)
+                            )
+                        ).split("\n").let { l -> List(l.count() - 1) { k -> Weight.fromCsv(";", "\"", l[k]) } })
+                }
+                this.runOnUiThread {
+                    Toast.makeText(
+                        this,
+                        this.getString(R.string.confirm_done_text),
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -405,49 +421,52 @@ class SettingActivity : AppCompatActivity() {
             .setTitle(this.getText(R.string.confirm_action_clear_text))
             .setNegativeButton(this.getText(R.string.confirm_negative_text)) { dialog, _ -> dialog.dismiss() }
             .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ ->
-                Executors.newSingleThreadExecutor().let { ex ->
-                    ex.execute {
-                        this.db.getDao().also {
-                            it.clearCards()
-                            it.clearCategories()
-                            it.clearWeights()
-                        }
-                        this.runOnUiThread { Toast.makeText(this, this.getString(R.string.confirm_done_text), Toast.LENGTH_LONG).show() }
-                        this.reloadLists()
-                        ex.shutdown()
+                this.updateListsAfter {
+                    this.db.getDao().also {
+                        it.clearCards()
+                        it.clearCategories()
+                        it.clearWeights()
+                    }
+                    this.runOnUiThread {
+                        Toast.makeText(
+                            this,
+                            this.getString(R.string.confirm_done_text),
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             }
             .show()
     }
 
-    private fun updateLists() {
-        this.db = MyRoomDatabase.getInstance(this)
+    private fun updateListsAfter(action: (() -> Unit)? = null) {
+        this.shouldReloadLists = true
 
         Executors.newSingleThreadExecutor().let {
             it.execute {
+                action?.invoke()
+
                 this.setupListsPager().also { pager ->
                     this.runOnUiThread {
+                        if (this.isPagerInitialized)
+                            this.savedLastTab = categories_pager.currentItem
+                        else this.isPagerInitialized = true
+
                         categories_pager.adapter = pager
                         categories_pager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(categories_tabs))
                         categories_tabs.setupWithViewPager(categories_pager)
+                        categories_pager.setCurrentItem(this.savedLastTab, false)
+
+                        Log.i("anoca::reloaded", categories_pager.toString())
                     }
                 }
+
                 it.shutdown()
             }
         }
     }
 
-    private fun reloadLists() {
-        this.runOnUiThread {
-            categories_pager.visibility = View.GONE
-            categories_pager.postInvalidate()
-            this.updateLists()
-            categories_pager.visibility = View.VISIBLE
-
-            Log.i("anoca::reloaded", categories_pager.toString())
-        }
-    }
+    private fun reloadLists() = this.updateListsAfter()
 
     companion object {
 

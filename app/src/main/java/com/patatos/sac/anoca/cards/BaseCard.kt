@@ -16,16 +16,6 @@ import android.widget.Toast
 
 import com.patatos.sac.anoca.MainActivity
 
-enum class Status {
-    UNINITIALIZED, // when the BaseCard has just been created
-    STARTING, // when the content of the BaseCard is set and the builder made
-    WAITING, // when creating the dialog (around the same time as the builder's create)
-    SAVED, // when the card is destroyed after being saved
-    DISMISSED, // when the user dismisses the BaseCard
-    DESTROYED, // when the card seemed to have been destroyed by the system..?
-    ANSWERED, ANSWERED_RIGHT, ANSWERED_WRONG // when the user answers
-}
-
 abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
 
     private var builder: AlertDialog.Builder? = null
@@ -40,11 +30,13 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
         super.onCreateDialog(savedInstanceState)
 
         if (savedInstanceState != null)
-            this.setContent(Content(
-                this.context as MainActivity,
-                savedInstanceState.getStringArray(MainActivity.SAVED_CONTENT_KEY)!!.toList(),
-                savedInstanceState.getString(MainActivity.SAVED_TITLE_KEY)!!
-            ))
+            this.setContent(
+                Content(
+                    this.context as MainActivity,
+                    savedInstanceState.getStringArray(MainActivity.SAVED_CONTENT_KEY)!!.toList(),
+                    savedInstanceState.getString(MainActivity.SAVED_TITLE_KEY)!!
+                )
+            )
 
         this.status = Status.WAITING
         return this.builder!!.create()
@@ -116,9 +108,9 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
         this.activity.startSettingActivity()
     }
 
-    protected open fun positive() { }
-    protected open fun negative() { }
-    protected open fun finally(status: Status) { }
+    protected open fun positive() {}
+    protected open fun negative() {}
+    protected open fun finally(status: Status) {}
 
     protected fun toast(text: CharSequence) {
         Toast.makeText(this.activity, text, Toast.LENGTH_SHORT).show()
@@ -167,6 +159,20 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
             this.submitStatus(Status.DESTROYED)
 
         super.onDestroy()
+    }
+
+    companion object {
+
+        enum class Status {
+            UNINITIALIZED, // when the BaseCard has just been created
+            STARTING, // when the content of the BaseCard is set and the builder made
+            WAITING, // when creating the dialog (around the same time as the builder's create)
+            SAVED, // when the card is destroyed after being saved
+            DISMISSED, // when the user dismisses the BaseCard
+            DESTROYED, // when the card seemed to have been destroyed by the system..?
+            ANSWERED, ANSWERED_RIGHT, ANSWERED_WRONG // when the user answers
+        }
+
     }
 
 }

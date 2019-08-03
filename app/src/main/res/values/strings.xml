@@ -35,7 +35,10 @@
     <string name="hint_weight_text">Weight</string>
     <string name="switch_canincluded_text">Can be included</string>
 
-    <string name="confirm_action_folder_text">Select location</string>
+    <string name="permission_required_text">Read and Write permission are required!</string>
+    <string name="save_title_text">Select folder to save to..</string>
+    <string name="load_title_text">Select folder to load from..</string>
+
     <string name="confirm_action_clear_text">Clear the database?</string>
 
     <string name="confirm_negative_text">No</string>
@@ -47,6 +50,8 @@
 
     <string name="database_file_key" translatable="false">anoca.database</string>
     <string name="preference_file_key" translatable="false">anoca.settings</string>
+
+    <string name="last_tab_key" translatable="false">anoca.settings.lasttab</string>
 
     <string name="master_switch_key" translatable="false">anoca.settings.master</string>
     <string name="switch_twosided_key" translatable="false">anoca.settings.twosided</string>

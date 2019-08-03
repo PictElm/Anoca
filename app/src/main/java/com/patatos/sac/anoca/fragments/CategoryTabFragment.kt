@@ -46,11 +46,11 @@ class CategoryTabFragment : Fragment() {
 
         @JvmStatic
         fun newInstance(
-                    category: Category,
-                    selectCards: (category_id: Long) -> List<DataCard>,
-                    onEditCategory: (category: Category) -> Unit,
-                    onEditCard: (card: DataCard) -> Unit
-                ): CategoryTabFragment {
+            category: Category,
+            selectCards: (category_id: Long) -> List<DataCard>,
+            onEditCategory: (category: Category) -> Unit,
+            onEditCard: (card: DataCard) -> Unit
+        ): CategoryTabFragment {
             return CategoryTabFragment().apply {
                 this.category = category
                 this.cards = selectCards(category.id)

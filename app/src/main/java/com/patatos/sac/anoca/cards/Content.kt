@@ -17,8 +17,8 @@ import java.io.InputStream
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.math.min
 
+import kotlin.math.min
 import kotlin.random.Random
 
 class Content(private val activity: MainActivity, private val raw: List<String>, val categoryName: String) {
@@ -50,8 +50,8 @@ class Content(private val activity: MainActivity, private val raw: List<String>,
 
     private fun getRaw(id: Int): String {
         return if (this.isOnline(id)) {
-            this.getOnline(id) {
-                    stream -> stream.reader().use { it.readText() }
+            this.getOnline(id) { stream ->
+                stream.reader().use { it.readText() }
             } ?: "Could not get online resource..."
         } else this.raw[id]
     }
@@ -70,8 +70,8 @@ class Content(private val activity: MainActivity, private val raw: List<String>,
 
     fun getImage(id: Int): Drawable? {
         return if (this.isOnline(id)) {
-            this.getOnline(id) {
-                    stream -> this.cropBitmapToDrawable(BitmapFactory.decodeStream(stream))
+            this.getOnline(id) { stream ->
+                this.cropBitmapToDrawable(BitmapFactory.decodeStream(stream))
             } ?: ContextCompat.getDrawable(this.activity, R.drawable.no_resource)
         } else this.cropBitmapToDrawable(BitmapFactory.decodeFile(this.raw[id]))
             ?: ContextCompat.getDrawable(this.activity, R.drawable.no_resource)

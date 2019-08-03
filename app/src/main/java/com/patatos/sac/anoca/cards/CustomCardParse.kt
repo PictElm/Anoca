@@ -44,9 +44,10 @@ class CustomCardParse(private var c: String, private var delayed: Boolean = fals
             Pair(Regex("_(.*?)_"), "<u>$1</u>"),
             Pair(Regex("`(.*?)`"), "<code>$1</code>"),
             Pair(Regex("~(.*?)~"), "<strike>$1</strike>"),
-            Pair(Regex("\\{(.+?):(.+?)\\}"), "$1" +
-                    "<sup>".repeat(5) + "<small>".repeat(5) + "<u>$2</u>" +
-                    "</small>".repeat(5) + "</sup>".repeat(5)
+            Pair(
+                Regex("\\{(.+?):(.+?)\\}"), "$1" +
+                        "<sup>".repeat(5) + "<small>".repeat(5) + "<u>$2</u>" +
+                        "</small>".repeat(5) + "</sup>".repeat(5)
             )
         )
         private val REGEX_CLEAN: List<Pair<Regex, String>> = listOf(
@@ -131,7 +132,8 @@ class CustomCardParse(private var c: String, private var delayed: Boolean = fals
                                         }
                                     }
                                 }
-                            } else -> "`'${it.groupValues[2]}' is not a valid punctuation`"
+                            }
+                            else -> "`'${it.groupValues[2]}' is not a valid punctuation`"
                         }
                     }
                 },

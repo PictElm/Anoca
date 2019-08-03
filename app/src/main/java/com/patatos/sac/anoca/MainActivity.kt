@@ -10,7 +10,6 @@ import android.widget.Toast
 import com.patatos.sac.anoca.cards.BaseCard
 import com.patatos.sac.anoca.cards.Content
 import com.patatos.sac.anoca.cards.CustomCardParse
-import com.patatos.sac.anoca.cards.Status
 import com.patatos.sac.anoca.cards.data.DataCard
 import com.patatos.sac.anoca.cards.data.MyRoomDatabase
 import com.patatos.sac.anoca.cards.types.Associate
@@ -54,7 +53,9 @@ class MainActivity : AppCompatActivity() {
                 Executors.newSingleThreadExecutor().let {
                     it.execute {
                         this.card = this.randomCardType().also { cardType ->
-                            cardType!!.setContent(this.randomContent(cardType.contentSize ?: 1, extraIdRestriction) ?: return@also)
+                            cardType!!.setContent(
+                                this.randomContent(cardType.contentSize ?: 1, extraIdRestriction) ?: return@also
+                            )
                             cardType.show(this.supportFragmentManager, "card")
                         }
                         it.shutdown()
@@ -118,11 +119,16 @@ class MainActivity : AppCompatActivity() {
         val root = this.db.getDao().let {
             if (categoryIdRestriction < 0) it.randomCard()
             else it.randomCardCategoryRestriction(categoryIdRestriction)
-        } .firstOrNull() ?: return null
+        }.firstOrNull() ?: return null
 
         this.db.getDao().randomCards(root.id, root.categoryId!!, n - 1).let {
             this.data = listOf(root) + it
-            this.data + List(n - it.count()) { DataCard(this.getString(R.string.hint_front_text), this.getString(R.string.hint_back_text)) }
+            this.data + List(n - it.count()) {
+                DataCard(
+                    this.getString(R.string.hint_front_text),
+                    this.getString(R.string.hint_back_text)
+                )
+            }
         }.forEach {
             CustomCardParse.processNested(db, Pair(it.dataFRaw, it.dataBRaw)).apply {
                 rawData.add(this.first)
@@ -133,29 +139,35 @@ class MainActivity : AppCompatActivity() {
         return Content(this, rawData, this.db.getDao().getCategory(root.categoryId!!).name)
     }
 
-    fun answered(status: Status) {
+    fun answered(status: BaseCard.Companion.Status) {
         Log.i("anoca::answered", "$status")
-        if (status == Status.ANSWERED || status == Status.ANSWERED_RIGHT || status == Status.ANSWERED_WRONG) {
-            Executors.newSingleThreadExecutor().let { ex ->
-                ex.execute {
-                    this.data.forEach {
-                        val weight = this.db.getDao().firstWeights(it.id)[0]
-                        weight.lastTime = System.currentTimeMillis()
-                        this.db.getDao().updateWeights(weight)
-                    }
-                    this.data[0].also {
-                        @Suppress("NON_EXHAUSTIVE_WHEN")
-                        when (status) {
-                            Status.ANSWERED_RIGHT -> it.answeredRight++
-                            Status.ANSWERED_WRONG -> it.answeredWrong++
+        when (status) {
+            BaseCard.Companion.Status.ANSWERED,
+            BaseCard.Companion.Status.ANSWERED_RIGHT,
+            BaseCard.Companion.Status.ANSWERED_WRONG -> {
+                Executors.newSingleThreadExecutor().let { ex ->
+                    ex.execute {
+                        this.data.forEach {
+                            val weight = this.db.getDao().firstWeights(it.id)[0]
+                            weight.lastTime = System.currentTimeMillis()
+                            this.db.getDao().updateWeights(weight)
                         }
-                        this.db.getDao().updateCards(it)
+                        this.data[0].also {
+                            @Suppress("NON_EXHAUSTIVE_WHEN")
+                            when (status) {
+                                BaseCard.Companion.Status.ANSWERED_RIGHT -> it.answeredRight++
+                                BaseCard.Companion.Status.ANSWERED_WRONG -> it.answeredWrong++
+                            }
+                            this.db.getDao().updateCards(it)
+                        }
+                        ex.shutdown()
                     }
-                    ex.shutdown()
                 }
+                this.finish()
             }
-            this.finish()
-        } else if (status == Status.SAVED || status == Status.DISMISSED) this.finish()
+            //BaseCard.Companion.Status.SAVED, BaseCard.Companion.Status.DISMISSED
+            else -> this.finish()
+        }
     }
 
     fun startSettingActivity() {

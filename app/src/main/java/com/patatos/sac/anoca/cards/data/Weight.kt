@@ -9,14 +9,15 @@ import com.patatos.sac.anoca.cards.data.csv.Csvable
 import java.text.DateFormat
 
 @Entity(tableName = "Weights")
-class Weight (
-        @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
+class Weight(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") @NonNull var id: Long,
 
-        @ColumnInfo(name = "card_id") @NonNull var cardId: Long,
-        @ColumnInfo(name = "last_time") @NonNull var lastTime: Long
-    ) : Csvable {
+    @ColumnInfo(name = "card_id") @NonNull var cardId: Long,
+    @ColumnInfo(name = "last_time") @NonNull var lastTime: Long
+) : Csvable {
 
-    @Ignore constructor(cardId: Long) : this(0, cardId, System.currentTimeMillis())
+    @Ignore
+    constructor(cardId: Long) : this(0, cardId, System.currentTimeMillis())
 
     override fun toString(): String {
         return "(${this.cardId}) ${DateFormat.getDateInstance().format(this.lastTime)}"
