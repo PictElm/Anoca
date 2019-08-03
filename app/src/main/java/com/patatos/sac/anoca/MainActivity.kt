@@ -1,14 +1,18 @@
 package com.patatos.sac.anoca
 
-import android.annotation.SuppressLint
+import android.content.*
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.widget.Toast
 
-import com.patatos.sac.anoca.cards.*
-import com.patatos.sac.anoca.cards.data.MyRoomDatabase
+import com.patatos.sac.anoca.cards.BaseCard
+import com.patatos.sac.anoca.cards.Content
+import com.patatos.sac.anoca.cards.CustomCardParse
+import com.patatos.sac.anoca.cards.Status
 import com.patatos.sac.anoca.cards.data.DataCard
+import com.patatos.sac.anoca.cards.data.MyRoomDatabase
 import com.patatos.sac.anoca.cards.types.Associate
 import com.patatos.sac.anoca.cards.types.Multiple
 import com.patatos.sac.anoca.cards.types.TwoSided
@@ -16,10 +20,6 @@ import com.patatos.sac.anoca.cards.types.WritingTask
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import android.R.attr.label
-import android.content.*
-import android.widget.Toast
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,18 +46,22 @@ class MainActivity : AppCompatActivity() {
                     savedInstanceState,
                     SAVED_CARD_KEY
                 ) as BaseCard?
-            } else if (this.sharedPref.getBoolean(this.getString(R.string.master_switch_key), true))
+            } else if (this.sharedPref.getBoolean(this.getString(R.string.master_switch_key), true)) {
+                val extraIdRestriction = this.intent.getLongExtra(EXTRA_CAT_ID, -1)
+                if (extraIdRestriction >= 0)
+                    Log.i("anoca::test", "main activity started with restriction 'Category.id = $extraIdRestriction'")
+
                 Executors.newSingleThreadExecutor().let {
                     it.execute {
-                        this.card = this.randomCard().also { card ->
-                            card!!.setContent(this.randomContent(card.contentSize ?: 1) ?: return@also)
-                            card.show(this.supportFragmentManager, "card")
+                        this.card = this.randomCardType().also { cardType ->
+                            cardType!!.setContent(this.randomContent(cardType.contentSize ?: 1, extraIdRestriction) ?: return@also)
+                            cardType.show(this.supportFragmentManager, "card")
                         }
                         it.shutdown()
                     }
                     if (!it.awaitTermination(20, TimeUnit.SECONDS)) this.finish()
                 }
-            else this.finish()
+            } else this.finish()
         } catch (e: Exception) {
             val title = e.localizedMessage
             val text = Log.getStackTraceString(e)
@@ -79,8 +83,10 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putParcelableArray(SAVED_DATA_KEY, this.data.toTypedArray())
-        this.supportFragmentManager.putFragment(outState, SAVED_CARD_KEY, this.card!!)
+        if (this::data.isInitialized) {
+            outState.putParcelableArray(SAVED_DATA_KEY, this.data.toTypedArray())
+            this.supportFragmentManager.putFragment(outState, SAVED_CARD_KEY, this.card!!)
+        } else this.finish()
     }
 
     override fun finish() {
@@ -91,25 +97,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun randomCard(): BaseCard? {
-        val cards: MutableList<BaseCard> = mutableListOf()
+    private fun randomCardType(): BaseCard? {
+        val cardTypes: MutableList<BaseCard> = mutableListOf()
 
         if (sharedPref.getBoolean(this.getString(R.string.switch_twosided_key), true))
-            cards.add(TwoSided())
+            cardTypes.add(TwoSided())
         if (sharedPref.getBoolean(this.getString(R.string.switch_writingtask_key), true))
-            cards.add(WritingTask())
+            cardTypes.add(WritingTask())
         if (sharedPref.getBoolean(this.getString(R.string.switch_multiple_key), true))
-            cards.add(Multiple())
+            cardTypes.add(Multiple())
         if (sharedPref.getBoolean(this.getString(R.string.switch_associate_key), true))
-            cards.add(Associate())
+            cardTypes.add(Associate())
 
-        return cards.random()
+        return cardTypes.random()
     }
 
-    private fun randomContent(n: Int): Content? {
+    private fun randomContent(n: Int, categoryIdRestriction: Long): Content? {
         val rawData: MutableList<String> = mutableListOf()
 
-        val root = this.db.getDao().randomCard().firstOrNull() ?: return null
+        val root = this.db.getDao().let {
+            if (categoryIdRestriction < 0) it.randomCard()
+            else it.randomCardCategoryRestriction(categoryIdRestriction)
+        } .firstOrNull() ?: return null
+
         this.db.getDao().randomCards(root.id, root.categoryId!!, n - 1).let {
             this.data = listOf(root) + it
             this.data + List(n - it.count()) { DataCard(this.getString(R.string.hint_front_text), this.getString(R.string.hint_back_text)) }
@@ -160,6 +170,8 @@ class MainActivity : AppCompatActivity() {
 
         const val SAVED_CONTENT_KEY = "saved-card-content"
         const val SAVED_TITLE_KEY = "saved-category-name"
+
+        const val EXTRA_CAT_ID = "com.patatos.sac.anoca.CAT_ID"
 
     }
 

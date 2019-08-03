@@ -9,13 +9,13 @@
             android:background="@android:color/transparent"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_weight="2"/>
     <Button
             android:id="@+id/data_b"
             android:background="@android:color/transparent"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_weight="2"/>
     <Button
             android:id="@+id/button_edit_card"
             android:text="@string/button_edit_text"

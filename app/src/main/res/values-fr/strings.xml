@@ -31,4 +31,5 @@
     <string name="confirm_negative_text">Non</string>
     <string name="confirm_positive_text">Oui</string>
     <string name="confirm_done_text">Fait</string>
+    <string name="button_test_text">Test</string>
 </resources>

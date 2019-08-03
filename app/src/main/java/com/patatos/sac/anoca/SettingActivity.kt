@@ -74,8 +74,12 @@ class SettingActivity : AppCompatActivity() {
                 this.putBoolean(getString(R.string.switch_associate_key), (it as Switch).isChecked).apply()
             }
         }
+    }
 
-        // async for db usage: setup categories and cards lists related fragments
+    override fun onResume() {
+        super.onResume()
+
+        // setup categories and cards lists related fragments
         this.updateLists()
     }
 
@@ -181,6 +185,16 @@ class SettingActivity : AppCompatActivity() {
         fab_add_category.setOnLongClickListener {
             AlertDialog.Builder(this)
                 .setMessage(debugMessageLeft)
+                .setPositiveButton(R.string.edit_validate_text) { dialog, _ -> dialog.dismiss() }
+                .setCancelable(true)
+                .create().show()
+            true
+        }
+
+        val debugMessageRight = "Hay!"
+        fab_add_card.setOnLongClickListener {
+            AlertDialog.Builder(this)
+                .setMessage(debugMessageRight)
                 .setPositiveButton(R.string.edit_validate_text) { dialog, _ -> dialog.dismiss() }
                 .setCancelable(true)
                 .create().show()
