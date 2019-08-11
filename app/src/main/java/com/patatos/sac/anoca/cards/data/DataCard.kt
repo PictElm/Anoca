@@ -10,7 +10,6 @@ import android.support.annotation.NonNull
 
 import com.patatos.sac.anoca.cards.Content
 import com.patatos.sac.anoca.cards.CustomCardParse
-import com.patatos.sac.anoca.cards.data.csv.Csvable
 
 import kotlin.math.min
 
@@ -29,7 +28,7 @@ class DataCard(
 
     @ColumnInfo(name = "category_id") var categoryId: Long?,
     @Ignore var categoryName: String?
-) : Parcelable, Csvable {
+) : Parcelable {
 
     @Ignore
     constructor(parcel: Parcel) : this(
@@ -70,21 +69,6 @@ class DataCard(
         return 0
     }
 
-    override fun csv(s: String, q: String): String {
-        return Csvable.dataToCsv(
-            s,
-            q,
-            this.id,
-            this.dataFRaw,
-            this.dataBRaw,
-            this.answeredRight,
-            this.answeredWrong,
-            this.canIncluded,
-            this.weight,
-            this.categoryId!!
-        )
-    }
-
     private fun getSimplifiedData(c: String): String {
         return CustomCardParse(c, true).toString().let {
             Content.IMG_SUF.fold(
@@ -111,22 +95,6 @@ class DataCard(
 
         override fun newArray(size: Int): Array<DataCard?> {
             return arrayOfNulls(size)
-        }
-
-        fun fromCsv(s: String, q: String, raw: String): DataCard {
-            return Csvable.csvToData(s, q, raw).let {
-                DataCard(
-                    it[0].toLong(),
-                    it[1],
-                    it[2],
-                    it[3].toInt(),
-                    it[4].toInt(),
-                    it[5].toBoolean(),
-                    it[6].toInt(),
-                    it[7].toLong(),
-                    null
-                )
-            }
         }
 
     }

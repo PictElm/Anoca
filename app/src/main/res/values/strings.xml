@@ -36,15 +36,21 @@
     <string name="switch_canincluded_text">Can be included</string>
 
     <string name="permission_required_text">Read and Write permission are required!</string>
-    <string name="save_title_text">Select folder to save to..</string>
-    <string name="load_title_text">Select folder to load from..</string>
 
+    <string name="save_title_text">Select folder to save to..</string>
+    <string name="load_title_text">Select file to load from..</string>
+
+    <string name="default_file_name">filename.txt</string>
+
+    <string name="confirm_action_save_text">Enter save file name</string>
     <string name="confirm_action_clear_text">Clear the database?</string>
 
     <string name="confirm_negative_text">No</string>
     <string name="confirm_positive_text">Go</string>
 
-    <string name="confirm_done_text">Done</string>
+    <string name="confirm_done_save_text">Saved %d cards!</string>
+    <string name="confirm_done_load_text">Added %d cards!</string>
+    <string name="confirm_done_clear_text">Removed %d cards!</string>
 
     <string name="writingtask_answer_text">Answer</string>
 
@@ -58,12 +64,4 @@
     <string name="switch_writingtask_key" translatable="false">anoca.settings.writingtask</string>
     <string name="switch_multiple_key" translatable="false">anoca.settings.multiple</string>
     <string name="switch_associate_key" translatable="false">anoca.settings.associate</string>
-
-    <string name="csv_cards_names" translatable="false">id;data_f;data_b;answered_right;answered_wrong;can_included;weight;category_id</string>
-    <string name="csv_categories_names" translatable="false">id;name;enabled</string>
-    <string name="csv_weights_names" translatable="false">id;card_id;last_time</string>
-
-    <string name="csv_cards_file" translatable="false">cards.csv</string>
-    <string name="csv_categories_file" translatable="false">categories.csv</string>
-    <string name="csv_weights_file" translatable="false">weights.csv</string>
 </resources>

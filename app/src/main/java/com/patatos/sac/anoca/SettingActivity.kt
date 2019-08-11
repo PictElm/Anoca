@@ -13,17 +13,18 @@ import android.support.design.widget.TabLayout
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.text.InputType
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Toast
 
 import com.patatos.sac.anoca.cards.data.Category
 import com.patatos.sac.anoca.cards.data.DataCard
 import com.patatos.sac.anoca.cards.data.MyRoomDatabase
 import com.patatos.sac.anoca.cards.data.Weight
-import com.patatos.sac.anoca.cards.data.csv.Csvable
 import com.patatos.sac.anoca.fragments.PagerAdapter
 
 import kotlinx.android.synthetic.main.activity_setting.*
@@ -45,6 +46,8 @@ class SettingActivity : AppCompatActivity() {
     private var savedLastTab = 0
     private var isPagerInitialized = false
 
+    private lateinit var allCategories: List<Category>
+
     private var shouldReloadLists = true
 
     private var onFolderSelected: ((String) -> Unit)? = null
@@ -61,7 +64,7 @@ class SettingActivity : AppCompatActivity() {
 
         this.savedLastTab = this.sharedPref.getInt(this.getString(R.string.last_tab_key), 0)
 
-        // setup settings toggles
+        // set settings toggles
         this.sharedPref.edit().also { editor ->
             listOf(
                 Pair(master_switch, R.string.master_switch_key),
@@ -117,6 +120,10 @@ class SettingActivity : AppCompatActivity() {
             this.onFolderSelected!!(data?.extras?.getString("data")!!)
     }
 
+    private fun notifyUser(text: String, vararg args: Any) {
+        this.runOnUiThread { Toast.makeText(this, text.format(*args), Toast.LENGTH_LONG).show() }
+    }
+
     private fun setupAddCategory() {
         fab_add_category.setOnClickListener {
             val layout = this.layoutInflater.inflate(R.layout.dialog_edit_category, null)
@@ -138,14 +145,14 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupAddCard(allCategories: List<Category>) {
+    private fun setupAddCard() {
         fab_add_card.setOnClickListener {
             val layout = this.layoutInflater.inflate(R.layout.dialog_edit_card, null)
 
             ArrayAdapter(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
-                allCategories
+                this.allCategories
             ).also { adapter ->
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 layout.edit_category.adapter = adapter
@@ -174,16 +181,14 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupListsPager(): PagerAdapter {
-        val allCategories = this.db.getDao().allCategories()
-
+    private fun setupFloatingButtons() {
         // set dialog to add a category
         this.setupAddCategory()
 
         // set dialog to add a card
-        this.setupAddCard(allCategories)
+        this.setupAddCard()
 
-        val debugMessageLeft = this.db.getDao().allWeights().fold("") { c, w -> "$c\n$w" }
+        val debugMessageLeft = this.db.getDao().allWeights().joinToString("\n") { w -> w.toString() }
         fab_add_category.setOnLongClickListener {
             AlertDialog.Builder(this)
                 .setMessage(debugMessageLeft)
@@ -202,6 +207,13 @@ class SettingActivity : AppCompatActivity() {
                 .create().show()
             true
         }
+    }
+
+    private fun setupListsPager(): PagerAdapter {
+        this.allCategories = this.db.getDao().allCategories()
+
+        // set right and left floating action buttons
+        this.setupFloatingButtons()
 
         val selectCards = { categoryId: Long -> this.db.getDao().allCards(categoryId) }
         val onEditCategory = { category: Category ->
@@ -249,10 +261,11 @@ class SettingActivity : AppCompatActivity() {
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 layout.edit_category.adapter = adapter
             }
-            layout.edit_category.setSelection(categories_pager.currentItem)
+            layout.edit_category.setSelection(categories_pager.currentItem, true)
 
             // set buttons to: apply changes, deny changes, delete card
-            AlertDialog.Builder(this).setView(layout)
+            AlertDialog.Builder(this)
+                .setView(layout)
                 .setTitle(this.getString(R.string.edit_card_title_text))
                 .setPositiveButton(R.string.edit_validate_text) { _, _ ->
                     this.updateListsAfter {
@@ -305,7 +318,7 @@ class SettingActivity : AppCompatActivity() {
         } else then(true)
     }
 
-    private fun askFolder(title: String, then: (String) -> Unit) {
+    private fun askLocation(title: String, pickFiles: Boolean, then: (String) -> Unit) {
         this.askPermissions(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -313,23 +326,12 @@ class SettingActivity : AppCompatActivity() {
             if (granted) {
                 this.startActivityForResult(
                     Intent(this, FolderPicker::class.java)
-                        .putExtra("title", title),
+                        .putExtra("title", title)
+                        .putExtra("pickFiles", pickFiles),
                     FOLDER_REQUEST_CODE
                 )
                 this.onFolderSelected = then
-
-                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    this.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), FOLDER_REQUEST_CODE)
-                    this.onFolderSelected = then
-                } else EditText(this).also {
-                    it.inputType = InputType.TYPE_CLASS_TEXT
-                    AlertDialog.Builder(this)
-                        .setTitle(this.getString(R.string.confirm_action_folder_text))
-                        .setView(it)
-                        .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ -> then(it.text.toString()) }
-                        .show()
-                }*/
-            } else Toast.makeText(this, this.getString(R.string.permission_required_text), Toast.LENGTH_LONG).show()
+            } else this.notifyUser(this.getString(R.string.permission_required_text))
         }
     }
 
@@ -349,69 +351,66 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
-    // TODO: rework
     private fun actionSave() {
-        this.askFolder(this.getString(R.string.save_title_text)) { folder ->
-            this.updateListsAfter {
-                this.db.getDao().also {
-                    this.writeFile(
-                        File(folder, this.getString(R.string.csv_cards_file)),
-                        Csvable.csvAll(";", "\"", it.getCards())
-                    )
-                    this.writeFile(
-                        File(folder, this.getString(R.string.csv_categories_file)),
-                        Csvable.csvAll(";", "\"", it.getCategories())
-                    )
-                    this.writeFile(
-                        File(folder, this.getString(R.string.csv_weights_file)),
-                        Csvable.csvAll(";", "\"", it.getWeights())
-                    )
+        this.askLocation(this.getString(R.string.save_title_text), false) { folder ->
+            val input = EditText(this)
+            input.inputType = InputType.TYPE_CLASS_TEXT
+            input.setHint(R.string.default_file_name)
+            AlertDialog.Builder(this)
+                .setTitle(this.getText(R.string.confirm_action_save_text))
+                .setView(input)
+                .setNegativeButton(this.getText(R.string.confirm_negative_text)) { dialog, _ -> dialog.dismiss() }
+                .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ ->
+                    this.updateListsAfter {
+                        var counter = 0
+                        this.db.getDao().also {
+                            this.writeFile(
+                                File(folder, input.text.toString()),
+                                this.allCategories.joinToString("\n$CAT_SEP\n") { category ->
+                                    "${category.name}\n" + it.allCards(category.id).joinToString("\n") { card ->
+                                        counter++
+                                        "${card.dataFRaw}$DAT_SEP${card.dataBRaw}$DAT_SEP${card.weight}"
+                                    }
+                                }
+                            )
+                        }
+                        this.notifyUser(this.getString(R.string.confirm_done_save_text), counter)
+                    }
                 }
-                this.runOnUiThread {
-                    Toast.makeText(
-                        this,
-                        this.getString(R.string.confirm_done_text),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
+                .show()
         }
     }
 
-    // TODO: rework
     private fun actionLoad() {
-        this.askFolder(this.getString(R.string.load_title_text)) { folder ->
+        this.askLocation(this.getString(R.string.load_title_text), true) { filepath ->
             this.updateListsAfter {
+                var counter = 0
                 this.db.getDao().also {
-                    it.setCards(
-                        this.readFile(
-                            File(
-                                folder,
-                                this.getString(R.string.csv_cards_file)
-                            )
-                        ).split("\n").let { l -> List(l.count() - 1) { k -> DataCard.fromCsv(";", "\"", l[k]) } })
-                    it.setCategories(
-                        this.readFile(
-                            File(
-                                folder,
-                                this.getString(R.string.csv_categories_file)
-                            )
-                        ).split("\n").let { l -> List(l.count() - 1) { k -> Category.fromCsv(";", "\"", l[k]) } })
-                    it.setWeights(
-                        this.readFile(
-                            File(
-                                folder,
-                                this.getString(R.string.csv_weights_file)
-                            )
-                        ).split("\n").let { l -> List(l.count() - 1) { k -> Weight.fromCsv(";", "\"", l[k]) } })
+                    this.readFile(File(filepath)).split("$CAT_SEP\n").forEach { data ->
+                        var categoryId: Long = -1
+                        var categoryName: String? = null
+                        data.split("\n").forEach { line ->
+                            if (categoryId < 0) {
+                                categoryName = line
+                                categoryId = it.insertCategories(Category(0, categoryName!!, true))[0]
+                            } else if (line != "") {
+                                counter++
+                                val desc = line.split(DAT_SEP)
+                                val w = desc[2].toInt()
+                                val id = it.insertCards(
+                                    DataCard(
+                                        0, desc[0], desc[1],
+                                        0, 0,
+                                        true, w,
+                                        categoryId, categoryName
+                                    )
+                                )[0]
+                                it.insertWeights(List(w) { Weight(id) })
+                            }
+                        }
+                    }
                 }
-                this.runOnUiThread {
-                    Toast.makeText(
-                        this,
-                        this.getString(R.string.confirm_done_text),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                this.notifyUser(this.getString(R.string.confirm_done_load_text), counter)
             }
         }
     }
@@ -422,18 +421,14 @@ class SettingActivity : AppCompatActivity() {
             .setNegativeButton(this.getText(R.string.confirm_negative_text)) { dialog, _ -> dialog.dismiss() }
             .setPositiveButton(this.getText(R.string.confirm_positive_text)) { _, _ ->
                 this.updateListsAfter {
+                    var counter = 0
                     this.db.getDao().also {
+                        counter += it.allCards().count()
                         it.clearCards()
                         it.clearCategories()
                         it.clearWeights()
                     }
-                    this.runOnUiThread {
-                        Toast.makeText(
-                            this,
-                            this.getString(R.string.confirm_done_text),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    this.notifyUser(this.getString(R.string.confirm_done_clear_text), counter)
                 }
             }
             .show()
@@ -453,7 +448,9 @@ class SettingActivity : AppCompatActivity() {
                         else this.isPagerInitialized = true
 
                         categories_pager.adapter = pager
-                        categories_pager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(categories_tabs))
+                        categories_pager.addOnPageChangeListener(
+                            TabLayout.TabLayoutOnPageChangeListener(categories_tabs)
+                        )
                         categories_tabs.setupWithViewPager(categories_pager)
                         categories_pager.setCurrentItem(this.savedLastTab, false)
 
@@ -472,6 +469,9 @@ class SettingActivity : AppCompatActivity() {
 
         const val FOLDER_REQUEST_CODE = 42
         const val PERMISSION_REQUEST_CODE = 42
+
+        const val CAT_SEP = "---"
+        const val DAT_SEP = "\\\\"
 
     }
 

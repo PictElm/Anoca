@@ -54,7 +54,8 @@ class MainActivity : AppCompatActivity() {
                     it.execute {
                         this.card = this.randomCardType().also { cardType ->
                             cardType!!.setContent(
-                                this.randomContent(cardType.contentSize ?: 1, extraIdRestriction) ?: return@also
+                                this.randomContent(cardType.contentSize ?: 1, extraIdRestriction)
+                                    ?: return@also this.finish()
                             )
                             cardType.show(this.supportFragmentManager, "card")
                         }

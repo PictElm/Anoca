@@ -9,10 +9,10 @@ interface MyDao {
     fun insertCards(vararg cards: DataCard): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertCategories(vararg categories: Category)
+    fun insertCategories(vararg categories: Category): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertWeights(weights: List<Weight>)
+    fun insertWeights(weights: List<Weight>): List<Long>
 
     @Update
     fun updateCards(vararg cards: DataCard)
@@ -74,26 +74,6 @@ interface MyDao {
 
     @Query("SELECT * FROM Weights WHERE card_id = :cardId ORDER BY last_time ASC LIMIT :limit")
     fun firstWeights(cardId: Long, limit: Int = 1): List<Weight>
-
-
-    /// spacial import / export 'csv' function (for DataCard::class, Category::class and Weight::class)
-    @Query("SELECT * FROM Cards")
-    fun getCards(): List<DataCard>
-
-    @Query("SELECT * FROM Categories")
-    fun getCategories(): List<Category>
-
-    @Query("SELECT * FROM Weights")
-    fun getWeights(): List<Weight>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun setCards(a: List<DataCard>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun setCategories(a: List<Category>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun setWeights(a: List<Weight>)
 
     @Query("DELETE FROM Cards WHERE 1")
     fun clearCards()
