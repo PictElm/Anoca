@@ -71,7 +71,11 @@ abstract class BaseCard(val contentSize: Int?) : DialogFragment() {
         } else {
             target.text = this.content.getSpanned(id)
 
-            TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(target, 4, 42, 1, TypedValue.COMPLEX_UNIT_SP)
+            TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(target, 24, 42, 1, TypedValue.COMPLEX_UNIT_SP)
+            //target.textSize = 32f
+            //target.setLineSpacing(0f, 1.5f)
+            //target.setPadding(0, (target.textSize / 2 + 5).toInt(), 0, 0)
+
             target.minLines = 1
             target.maxLines = target.text.split(' ').count()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

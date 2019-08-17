@@ -13,19 +13,19 @@ import android.support.design.widget.TabLayout
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import android.text.InputType
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.Toast
+import android.widget.*
 
 import com.patatos.sac.anoca.cards.data.Category
 import com.patatos.sac.anoca.cards.data.DataCard
 import com.patatos.sac.anoca.cards.data.MyRoomDatabase
 import com.patatos.sac.anoca.cards.data.Weight
 import com.patatos.sac.anoca.fragments.PagerAdapter
+import io.github.mljli.rubyspan.RubyTagHandler
 
 import kotlinx.android.synthetic.main.activity_setting.*
 import kotlinx.android.synthetic.main.content_setting.*
@@ -198,10 +198,16 @@ class SettingActivity : AppCompatActivity() {
             true
         }
 
-        val debugMessageRight = "Hay!"
+        val debugMessageRight = "<p><ruby>日本<rt>にっぽん</rt></ruby>!!</p>"
         fab_add_card.setOnLongClickListener {
+            val b = TextView(this)
+            b.textSize = 20f
+            b.setLineSpacing(0f, 1.5f)
+            b.setPadding(0, b.textSize.toInt(), 0, -2 * b.textSize.toInt())
+            b.text = Html.fromHtml(debugMessageRight, 0, null, RubyTagHandler())
+
             AlertDialog.Builder(this)
-                .setMessage(debugMessageRight)
+                .setView(b)
                 .setPositiveButton(R.string.edit_validate_text) { dialog, _ -> dialog.dismiss() }
                 .setCancelable(true)
                 .create().show()

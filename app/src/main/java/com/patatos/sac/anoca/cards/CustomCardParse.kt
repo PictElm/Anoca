@@ -11,6 +11,13 @@ class CustomCardParse(private var c: String, private var delayed: Boolean = fals
             this.doRegex(REGEX_MAKE)
     }
 
+    override fun toString(): String {
+        if (this.delayed)
+            this.doRegex(REGEX_CLEAN)
+
+        return this.c
+    }
+
     private fun doRegex(withThat: List<Pair<Regex, String>>) {
         withThat.forEach {
             this.c = this.c.replace(it.first, it.second)
@@ -23,19 +30,11 @@ class CustomCardParse(private var c: String, private var delayed: Boolean = fals
             this.doRegex(REGEX_MAKE)
         }
 
-        return this.c
-    }
-
-    override fun toString(): String {
-        if (this.delayed)
-            this.doRegex(REGEX_CLEAN)
-
-        return this.c
+        return "<p>${this.c}</p>"
     }
 
     companion object {
 
-        // TODO: "<ruby>$1<rt>$2</rt></ruby>" --> needs an alternative to RubySpan
         private val REGEX_MAKE: List<Pair<Regex, String>> = listOf(
             Pair(Regex("\\^\\{(.*?)\\}"), "<sup><small>$1</small></sup>"),
             Pair(Regex("_\\{(.*?)\\}"), "<sub><small>$1</small></sub>"),
@@ -44,11 +43,7 @@ class CustomCardParse(private var c: String, private var delayed: Boolean = fals
             Pair(Regex("_(.*?)_"), "<u>$1</u>"),
             Pair(Regex("`(.*?)`"), "<code>$1</code>"),
             Pair(Regex("~(.*?)~"), "<strike>$1</strike>"),
-            Pair(
-                Regex("\\{(.+?):(.+?)\\}"), "$1" +
-                        "<sup>".repeat(5) + "<small>".repeat(5) + "<u>$2</u>" +
-                        "</small>".repeat(5) + "</sup>".repeat(5)
-            )
+            Pair(Regex("\\{(.+?):(.+?)\\}"), "<ruby>$1<rt>$2</rt></ruby>")
         )
         private val REGEX_CLEAN: List<Pair<Regex, String>> = listOf(
             Pair(Regex("\\^\\{(.*?)\\}"), "$1"),

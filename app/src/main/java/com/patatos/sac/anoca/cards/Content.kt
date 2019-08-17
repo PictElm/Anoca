@@ -12,6 +12,7 @@ import android.text.SpannedString
 
 import com.patatos.sac.anoca.MainActivity
 import com.patatos.sac.anoca.R
+import io.github.mljli.rubyspan.RubyTagHandler
 
 import java.io.InputStream
 import java.net.URL
@@ -84,7 +85,7 @@ class Content(private val activity: MainActivity, private val raw: List<String>,
     fun getSpanned(id: Int): Spanned {
         return this.getRaw(id).let {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                Html.fromHtml(CustomCardParse(it).toMarkup(), 0)
+                Html.fromHtml(CustomCardParse(it).toMarkup(), 0, null, RubyTagHandler()) // Html.fromHtml(source, 0)
             else SpannedString(CustomCardParse(it, true).toString())
         }
     }
